@@ -34,14 +34,15 @@ def preprocess_text(text):
     filtered_tokens = [word for word in filtered_tokens if word]
 
     # Apply stemming
-    # stemmer = PorterStemmer()
-    # stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
+    stemmer = PorterStemmer()
+    stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
 
-    return filtered_tokens
+    return filtered_tokens, stemmed_tokens
 
 
-# Initialize the inverted index as a Dictionary
+# Initialize the inverted index and stem mapping
 inverted_index = {}
+original_to_stemmed = {}
 
 # Iterate over the DataFrame rows
 for idx, row in df.iterrows():
@@ -50,17 +51,30 @@ for idx, row in df.iterrows():
 
     # Preprocess 'Title' column
     if 'Title' in df.columns and pd.notnull(row['Title']):
-        words += preprocess_text(row['Title'])
+        original_words, stemmed_words = preprocess_text(row['Title'])
+        words += stemmed_words
+        # Map original to stemmed
+        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-    # Preprocess 'Country' column
+        # Preprocess 'Country' column
     if 'Country' in df.columns and pd.notnull(row['Country']):
-        words += preprocess_text(row['Country'])
+        original_words, stemmed_words = preprocess_text(row['Country'])
+        words += stemmed_words
+        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-    # Preprocess 'channel_type' column
+        # Preprocess 'channel_type' column
     if 'channel_type' in df.columns and pd.notnull(row['channel_type']):
-        words += preprocess_text(row['channel_type'])
+        original_words, stemmed_words = preprocess_text(row['channel_type'])
+        words += stemmed_words
+        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-    # Add words to the inverted index
+        # Preprocess 'category' column
+    if 'category' in df.columns and pd.notnull(row['category']):
+        original_words, stemmed_words = preprocess_text(row['category'])
+        words += stemmed_words
+        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
+
+        # Add words to the inverted index
     for word in words:
         if word not in inverted_index:
             inverted_index[word] = set()
@@ -76,21 +90,24 @@ def boolean_search(query):
     translator = str.maketrans('', '', string.punctuation)
     filtered_tokens = [word.translate(translator) for word in tokens]
 
+    # Apply stemming to query tokens
+    stemmer = PorterStemmer()
+    stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]
+
     # Track the result sets for each operation
     result = set(df.index)  # Start with all documents for AND operations
     current_operation = 'AND'  # Default to AND
 
-    for token in filtered_tokens:
-        if token == 'AND':
+    for token in stemmed_tokens:  # Use stemmed_tokens for matching
+        if token.upper() == 'AND':
             current_operation = 'AND'
-        elif token == 'OR':
+        elif token.upper() == 'OR':
             current_operation = 'OR'
-        elif token == 'NOT':
+        elif token.upper() == 'NOT':
             current_operation = 'NOT'
         else:
-            # Perform the operation
-            token = token.lower()  # Lowercase the token
-            if token in inverted_index:
+            # Perform the operation based on the current operator
+            if token in inverted_index:  # Check for the stemmed token
                 word_set = inverted_index[token]
                 if current_operation == 'AND':
                     result = result.intersection(word_set)
@@ -124,7 +141,7 @@ def save_results_to_txt(results, filename='search_results.txt'):
 
 
 # Test the search engine
-query = "T-Series OR Movies OR Beast NOT Nursery"
+query = "T-Series AND music"
 results = boolean_search(query)
 print(f"Search Results for '{query}':\n{results}")
 
