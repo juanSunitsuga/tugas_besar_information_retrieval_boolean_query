@@ -1,6 +1,10 @@
 import pandas as pd
 import re
 import chardet
+import string
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
 
 # Detect file encoding
 with open('Global YouTube Statistics.csv', 'rb') as f:
@@ -14,10 +18,22 @@ print(df.columns)
 
 # Preprocessing: Clean and tokenize text (you can extend this function)
 def preprocess_text(text):
-    text = text.lower()  # Convert to lowercase
-    text = re.sub(r'\W+', ' ', text)  # Remove punctuation
-    words = text.split()  # Tokenize
-    return words
+    # Convert to lowercase
+    text = text.lower()
+
+    # Remove stop words
+    stop_words = set(stopwords.words('english'))  # Stop words
+    filtered_tokens = [word for word in text if word not in stop_words]
+
+    # Remove punctuation
+    translator = str.maketrans('', '', string.punctuation)
+    filtered_tokens = [word.translate(translator) for word in filtered_tokens]
+    filtered_tokens = [word for word in filtered_tokens if word]
+
+    stemmer = PorterStemmer()
+    stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
+
+    return stemmed_tokens
 
 
 # Build an inverted index
