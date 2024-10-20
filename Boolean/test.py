@@ -37,12 +37,11 @@ def preprocess_text(text):
     stemmer = PorterStemmer()
     stemmed_tokens = [stemmer.stem(word) for word in filtered_tokens]
 
-    return filtered_tokens, stemmed_tokens
+    return stemmed_tokens
 
 
 # Initialize the inverted index and stem mapping
 inverted_index = {}
-original_to_stemmed = {}
 
 # Iterate over the DataFrame rows
 for idx, row in df.iterrows():
@@ -51,30 +50,25 @@ for idx, row in df.iterrows():
 
     # Preprocess 'Title' column
     if 'Title' in df.columns and pd.notnull(row['Title']):
-        original_words, stemmed_words = preprocess_text(row['Title'])
+        stemmed_words = preprocess_text(row['Title'])
         words += stemmed_words
-        # Map original to stemmed
-        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-        # Preprocess 'Country' column
+    # Preprocess 'Country' column
     if 'Country' in df.columns and pd.notnull(row['Country']):
-        original_words, stemmed_words = preprocess_text(row['Country'])
+        stemmed_words = preprocess_text(row['Country'])
         words += stemmed_words
-        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-        # Preprocess 'channel_type' column
+    # Preprocess 'channel_type' column
     if 'channel_type' in df.columns and pd.notnull(row['channel_type']):
-        original_words, stemmed_words = preprocess_text(row['channel_type'])
+        stemmed_words = preprocess_text(row['channel_type'])
         words += stemmed_words
-        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-        # Preprocess 'category' column
+    # Preprocess 'category' column
     if 'category' in df.columns and pd.notnull(row['category']):
-        original_words, stemmed_words = preprocess_text(row['category'])
+        stemmed_words = preprocess_text(row['category'])
         words += stemmed_words
-        original_to_stemmed.update(dict(zip(original_words, stemmed_words)))
 
-        # Add words to the inverted index
+    # Add words to the inverted index
     for word in words:
         if word not in inverted_index:
             inverted_index[word] = set()
