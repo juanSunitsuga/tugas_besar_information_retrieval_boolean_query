@@ -67,7 +67,7 @@ for idx, row in df.iterrows():
     if 'category' in df.columns and pd.notnull(row['category']):
         stemmed_words = preprocess_text(row['category'])
         words += stemmed_words
-    
+
     # Preprocess 'created_month' column
     if 'created_month' in df.columns and pd.notnull(row['created_month']):
         stemmed_words = preprocess_text(row['created_month'])
@@ -78,6 +78,35 @@ for idx, row in df.iterrows():
         if word not in inverted_index:
             inverted_index[word] = set()
         inverted_index[word].add(idx)
+
+
+def translate_to_boolean_query(query):
+    # Convert the query to lowercase to handle case-insensitivity
+    query = query.lower()
+
+    # Replace 'or' and 'not' with their Boolean equivalents
+    query = query.replace(" or ", " OR ").replace(" not ", " NOT ")
+
+    # Split the query into terms
+    terms = query.split()
+
+    # Initialize a list to store the final terms
+    translated_terms = []
+
+    for i, term in enumerate(terms):
+        # If the term is "OR" or "NOT", keep it as is
+        if term == "OR" or term == "NOT":
+            translated_terms.append(term)
+        else:
+            # Add 'AND' between terms that are not followed by "OR" or "NOT"
+            if i > 0 and terms[i - 1] != "OR" and terms[i - 1] != "NOT":
+                translated_terms.append("AND")
+            translated_terms.append(term)
+
+    # Join the translated terms into the final Boolean query
+    boolean_query = ' '.join(translated_terms)
+
+    return boolean_query
 
 
 # Boolean query parser (supports AND, OR, NOT)
@@ -142,8 +171,10 @@ def save_results_to_txt(results, filename='search_results.txt'):
 
 
 # Test the search engine
-query = "T-Series AND music AND Mar"
-results = boolean_search(query)
+# Example usage
+query = "tseries music or movies not songs"
+boolean_query = translate_to_boolean_query(query)  # Output: tseries AND music OR movies NOT songs
+results = boolean_search(boolean_query)
 print(f"Search Results for '{query}':\n{results}")
 
 save_results_to_txt(results)
