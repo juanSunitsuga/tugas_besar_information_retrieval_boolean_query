@@ -67,6 +67,11 @@ for idx, row in df.iterrows():
     if 'category' in df.columns and pd.notnull(row['category']):
         stemmed_words = preprocess_text(row['category'])
         words += stemmed_words
+    
+    # Preprocess 'created_month' column
+    if 'created_month' in df.columns and pd.notnull(row['created_month']):
+        stemmed_words = preprocess_text(row['created_month'])
+        words += stemmed_words
 
     # Add words to the inverted index
     for word in words:
@@ -126,8 +131,10 @@ def save_results_to_txt(results, filename='search_results.txt'):
             file.write(f"Row {index}:\n")
             file.write(f"Title: {row['Title']}\n")
             file.write(f"Youtuber: {row['Youtuber']}\n")
+            file.write(f"Category: {row['category']}\n")
             file.write(f"Country: {row['Country']}\n")
             file.write(f"Subscribers: {row['subscribers']}\n")
+            file.write(f"Created Month: {row['created_month']}\n")
             file.write(f"Channel Type: {row['channel_type']}\n")
             file.write(f"Video Views: {row['video views']}\n")
             file.write("-" * 40 + "\n")
@@ -135,7 +142,7 @@ def save_results_to_txt(results, filename='search_results.txt'):
 
 
 # Test the search engine
-query = "T-Series AND music"
+query = "T-Series AND music AND Mar"
 results = boolean_search(query)
 print(f"Search Results for '{query}':\n{results}")
 
