@@ -172,9 +172,15 @@ def save_results_to_txt(results, filename='search_results.txt'):
 
 # Test the search engine
 # Example usage
-query = "tseries music or movies not songs"
-boolean_query = translate_to_boolean_query(query)  # Output: tseries AND music OR movies NOT songs
-results = boolean_search(boolean_query)
-print(f"Search Results for '{query}':\n{results}")
 
-save_results_to_txt(results)
+query = ""
+print(f"type !exit to close the program")
+while query != "!exit":
+    query = input("Query: ")
+    if query == "!exit":
+        break
+    boolean_query = translate_to_boolean_query(query)  # Output: tseries AND music OR movies NOT songs
+    results = boolean_search(boolean_query)
+    print(f"Search Results for '{query}':\n{results}")
+
+    save_results_to_txt(results)
