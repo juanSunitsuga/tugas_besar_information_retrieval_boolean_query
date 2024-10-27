@@ -6,6 +6,7 @@ from nltk.stem import PorterStemmer
 # Global variable for inverted index
 inverted_index = {}
 
+
 # Load the inverted index from a JSON file
 def load_inverted_index(file_path):
     global inverted_index
@@ -16,6 +17,7 @@ def load_inverted_index(file_path):
         print(f"Error: File not found at path {file_path}")
     except json.JSONDecodeError:
         print(f"Error: Failed to parse JSON from file {file_path}")
+
 
 # Load the CSV file and create a mapping of row index (document ID) to the information
 def load_csv_data(file_path):
@@ -28,6 +30,7 @@ def load_csv_data(file_path):
     except FileNotFoundError:
         print(f"Error: File not found at path {file_path}")
     return data
+
 
 # Translate a query to a Boolean form
 def translate_to_boolean_query(query):
@@ -48,6 +51,7 @@ def translate_to_boolean_query(query):
     # Join the translated terms into the final Boolean query
     boolean_query = ' '.join(translated_terms)
     return boolean_query
+
 
 # Boolean query parser (supports AND, OR, NOT)
 def boolean_search(query):
@@ -84,6 +88,7 @@ def boolean_search(query):
 
     return list(result) if result else []
 
+
 # Save the search results to a text file
 def save_results_to_txt(results, data, filename='search_results_steam.txt'):
     with open(filename, 'w', encoding='utf-8') as file:
@@ -99,6 +104,7 @@ def save_results_to_txt(results, data, filename='search_results_steam.txt'):
                     file.write(f"Release_date: {doc.get('Release_date', 'N/A')}\n")
                     file.write("-" * 40 + "\n")
     print(f"Results saved to {filename}")
+
 
 # Load data
 load_inverted_index('../dataset/inverted_index.json')
