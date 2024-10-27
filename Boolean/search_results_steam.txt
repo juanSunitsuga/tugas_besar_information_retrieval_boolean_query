@@ -1,0 +1,20 @@
+Row 4873:
+Name: Flight of the Paladin
+Price: $1.99
+Release_date: Oct 24, 2015
+----------------------------------------
+Row 362:
+Name: Paladins®
+Price: Free To Play
+Release_date: May 8, 2018
+----------------------------------------
+Row 5588:
+Name: Paladins Gold Edition
+Price: $18.00
+Release_date: Feb 3, 2021
+----------------------------------------
+Row 4743:
+Name: Hero Siege - Avenger Paladin (Class + Skin)
+Price: $0.79
+Release_date: Apr 30, 2015
+----------------------------------------
