@@ -13,10 +13,8 @@ html {
  * Remove the margin in all browsers (opinionated).
  */
 body {
-    background: url("../images/Searchs_130.jpg");
     background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background: url("../images/Searchs_130.jpg") no-repeat fixed center;
     margin: 0;
 }
 
@@ -500,7 +498,7 @@ legend {
 }
 
 .choices[data-type*="select-one"] .choices__button {
-    background-image: url("../../icons/cross-inverse.svg");
+    background-image: url("../images/cross-sign.png");
     padding: 0;
     background-size: 8px;
     height: 100%;
@@ -567,7 +565,7 @@ legend {
     margin-left: 8px;
     padding-left: 16px;
     border-left: 1px solid #008fa1;
-    background-image: url("../../icons/cross.svg");
+    background-image: url("../images/cross-sign.png");
     background-size: 8px;
     width: 8px;
     line-height: 1;
@@ -829,7 +827,6 @@ button {
     -ms-flex-pack: center;
     justify-content: center;
     font-family: 'Poppins', sans-serif;
-    background: url("../images/Searchs_130.jpg");
     background-position: bottom right;
     background-repeat: no-repeat;
     background-size: 100%;
@@ -989,59 +986,92 @@ button {
         font-size: 13px;
     }
 }
-
 /* Style for the results container */
-.results {
-    background-color: white;
-    border: 1px solid #ddd; /* Subtle border to separate from background */
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optional: gives a subtle shadow for emphasis */
-    margin-top: 20px;
-    color: black;
-}
+    .results {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        color: black;
+    }
 
-/* Heading for the results */
-.results h2 {
-    font-size: 1.5em;
-    color: #00BCD4; /* Accent color, can match search button color */
-    margin-bottom: 10px;
-}
+    /* Heading for the results */
+    .results h2 {
+        font-size: 1.5em;
+        color: #00BCD4;
+        margin-bottom: 10px;
+    }
 
-/* List of results */
-.results ul {
-    list-style-type: none;
-    padding: 0;
-}
+    /* List of results */
+    .results ul {
+        list-style-type: none;
+        padding: 0;
+    }
 
-/* Individual result item */
-.results li {
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd; /* Divider between results */
-}
+    /* Individual result item */
+    .results li {
+        padding: 10px 0;
+        border-bottom: 1px solid #ddd;
+    }
 
-.results li:last-child {
-    border-bottom: none; /* Remove border for the last item */
-}
+    .results li:last-child {
+        border-bottom: none;
+    }
 
-/* Style for the text inside result items */
-.results li strong {
-    color: #333; /* Darker color for the name */
-    font-size: 1.2em;
-}
+    /* Style for the text inside result items */
+    .results li strong {
+        color: #333;
+        font-size: 1.2em;
+    }
 
-.results li span {
-    display: block;
-    color: #777; /* Lighter color for price and date */
-    font-size: 0.9em;
-    margin-top: 5px;
-}
+    .results li span {
+        display: block;
+        color: #777;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
 
-/* Optional: Hover effect for result items */
-.results li:hover {
-    background-color: #f9f9f9;
-    cursor: pointer;
-}
+    /* Optional: Hover effect for result items */
+    .results li:hover {
+        background-color: #f9f9f9;
+        cursor: pointer;
+    }
 
+    /* Pagination container styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
 
-/*# sourceMappingURL=Searchs_130.css.map */
+    .pagination-btn {
+        background-color: #1357b0; /* Matching theme color */
+        color: white;
+        padding: 2% 20%;
+        margin: 0 10px;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 1em;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .pagination-btn:hover {
+        background-color: #1357b0; /* Darker shade on hover */
+    }
+
+    .pagination-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+
+    .prev-btn {
+        border-radius: 4px 4px 4px 4px; /* Rounded left corner for Previous button */
+    }
+
+    .next-btn {
+        border-radius: 4px 4px 4px 4px; /* Rounded right corner for Next button */
+    }

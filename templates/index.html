@@ -27,11 +27,10 @@
                 <button class="btn-search" type="submit">SEARCH</button>
             </div>
         </div>
-        {% if query %}
+        {% if results %}
         <div class="results">
-            <h2>Search Results for: "{{ query }}"</h2>
-            {% if results %}
-            <ul>
+            <h2>Search Results</h2>
+            <ul id="resultsList">
                 {% for result in results %}
                 <li>
                     <strong>{{ result.name }}</strong> <br>
@@ -40,17 +39,17 @@
                 </li>
                 {% endfor %}
             </ul>
-            {% else %}
-            <p>No results found for "{{ query }}". Please try a different search.</p>
+
+            <!-- Pagination Controls -->
+            {% if page > 1 %}
+            <a href="{{ url_for('search', page=page-1, query=query) }}" class="pagination-btn prev-btn">Previous</a>
+            {% endif %}
+
+            {% if page * per_page < total_results %}
+            <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn prev-btn">Next</a>
             {% endif %}
         </div>
-        {% elif not query %}
-        <span class="info">Search all the games in Steam!</span>
-        {% else %}
-        <p>Please enter a search query above to see the results.</p>
         {% endif %}
-
-
     </form>
 </div>
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->

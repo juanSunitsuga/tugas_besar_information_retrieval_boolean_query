@@ -1,7 +1,9 @@
+import difflib
 import json
 import csv
 import string
 from nltk.stem import PorterStemmer
+import requests
 
 # Global variable for inverted index
 inverted_index = {}
@@ -17,6 +19,22 @@ def load_inverted_index(file_path):
         print(f"Error: File not found at path {file_path}")
     except json.JSONDecodeError:
         print(f"Error: Failed to parse JSON from file {file_path}")
+
+
+# Get synonyms for a word using the Datamuse API
+def get_synonyms(word):
+    url = f'https://api.datamuse.com/words?rel_syn={word}&max=10'
+    response = requests.get(url)
+    print(f"API Response: {response.json()}")
+    data = response.json()
+    synonyms = [item['word'] for item in data]
+    return synonyms
+
+
+# Find closest match using difflib
+def find_closest_match(term, candidates):
+    matches = difflib.get_close_matches(term, candidates, n=1, cutoff=0.8)  # cutoff controls match similarity
+    return matches[0] if matches else None
 
 
 # Load the CSV file and create a mapping of row index (document ID) to the information
@@ -40,7 +58,7 @@ def translate_to_boolean_query(query):
     translated_terms = []
 
     for i, term in enumerate(terms):
-        if term == "OR" or term == "NOT":  # Keep "OR" or "NOT" as is
+        if term == "OR" or term == "NOT":
             translated_terms.append(term)
         else:
             # Add 'AND' between terms not followed by "OR" or "NOT"
@@ -53,14 +71,13 @@ def translate_to_boolean_query(query):
     return boolean_query
 
 
-# Boolean query parser (supports AND, OR, NOT)
 def boolean_search(query):
-    global inverted_index  # Use the global inverted_index variable
-    tokens = query.upper().split()  # Split the query into tokens
+    global inverted_index
+    tokens = query.upper().split()
     translator = str.maketrans('', '', string.punctuation)
     filtered_tokens = [word.translate(translator) for word in tokens]
     stemmer = PorterStemmer()
-    stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]  # Apply stemming
+    stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]
 
     result = None
     current_operation = 'AND'
@@ -73,9 +90,24 @@ def boolean_search(query):
         elif token == 'NOT':
             current_operation = 'NOT'
         else:
-            if token in inverted_index:  # Check for the stemmed token in the inverted index
-                word_set = set(map(int, inverted_index[token]))  # Convert doc IDs to int if needed
-                if result is None:  # Initialize result if this is the first term
+            # First, check if the term is in the inverted index
+            if token not in inverted_index:
+                # Try to get synonyms for the term
+                synonyms = get_synonyms(token)
+                if synonyms:
+                    print(f"Did you mean one of these instead of '{token}'? {', '.join(synonyms)}")
+                    # Optionally, you could let the user choose or automatically try the first synonym
+                    token = synonyms[0]  # Choose the first synonym as a fallback
+                else:
+                    # If no synonyms found, use the closest match from difflib
+                    closest_match = find_closest_match(token, inverted_index.keys())
+                    if closest_match:
+                        print(f"Did you mean '{closest_match}' instead of '{token}'?")
+                        token = closest_match  # Use the closest match found by difflib
+
+            if token in inverted_index:
+                word_set = set(map(int, inverted_index[token]))
+                if result is None:
                     result = word_set
                 elif current_operation == 'AND':
                     result &= word_set
@@ -84,24 +116,6 @@ def boolean_search(query):
                 elif current_operation == 'NOT':
                     result -= word_set
             elif current_operation == 'AND':
-                result = set()  # If no match for AND, clear the result to empty set
+                result = set()  # Clear result if no match found
 
-    return list(result) if result else []  # Return an empty list if no result
-
-
-
-# Save the search results to a text file
-# def save_results_to_txt(results, data, filename='search_results_steam.txt'):
-#     with open(filename, 'w', encoding='utf-8') as file:
-#         if not results:
-#             file.write("No matching documents found.\n")
-#         else:
-#             for doc_id in results:
-#                 if doc_id in data:
-#                     doc = data[doc_id]
-#                     file.write(f"Row {doc_id}:\n")
-#                     file.write(f"Name: {doc.get('Name', 'N/A')}\n")
-#                     file.write(f"Price: {doc.get('Price', 'N/A')}\n")
-#                     file.write(f"Release_date: {doc.get('Release_date', 'N/A')}\n")
-#                     file.write("-" * 40 + "\n")
-#     print(f"Results saved to {filename}")
+    return list(result) if result else []
