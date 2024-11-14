@@ -66,11 +66,11 @@ def boolean_search(query):
     current_operation = 'AND'
 
     for token in stemmed_tokens:
-        if token.upper() == 'AND':
+        if token == 'AND':
             current_operation = 'AND'
-        elif token.upper() == 'OR':
+        elif token == 'OR':
             current_operation = 'OR'
-        elif token.upper() == 'NOT':
+        elif token == 'NOT':
             current_operation = 'NOT'
         else:
             if token in inverted_index:  # Check for the stemmed token in the inverted index
@@ -84,44 +84,24 @@ def boolean_search(query):
                 elif current_operation == 'NOT':
                     result -= word_set
             elif current_operation == 'AND':
-                result = set()
+                result = set()  # If no match for AND, clear the result to empty set
 
-    return list(result) if result else []
+    return list(result) if result else []  # Return an empty list if no result
+
 
 
 # Save the search results to a text file
-def save_results_to_txt(results, data, filename='search_results_steam.txt'):
-    with open(filename, 'w', encoding='utf-8') as file:
-        if not results:
-            file.write("No matching documents found.\n")
-        else:
-            for doc_id in results:
-                if doc_id in data:
-                    doc = data[doc_id]
-                    file.write(f"Row {doc_id}:\n")
-                    file.write(f"Name: {doc.get('Name', 'N/A')}\n")
-                    file.write(f"Price: {doc.get('Price', 'N/A')}\n")
-                    file.write(f"Release_date: {doc.get('Release_date', 'N/A')}\n")
-                    file.write("-" * 40 + "\n")
-    print(f"Results saved to {filename}")
-
-
-# Load data
-load_inverted_index('../dataset/inverted_index.json')
-csv_data = load_csv_data('../dataset/steam_uncleaned.csv')
-
-# Start the query loop
-query = ""
-print("Type !exit to close the program")
-while query != "!exit":
-    query = input("Query: ")
-    if query == "!exit":
-        break
-
-    # Translate the query to Boolean form and perform the search
-    boolean_query = translate_to_boolean_query(query)
-    results = boolean_search(boolean_query)
-
-    # Display and save results
-    print(f"Matching document IDs for '{query}': {results}")
-    save_results_to_txt(results, csv_data)
+# def save_results_to_txt(results, data, filename='search_results_steam.txt'):
+#     with open(filename, 'w', encoding='utf-8') as file:
+#         if not results:
+#             file.write("No matching documents found.\n")
+#         else:
+#             for doc_id in results:
+#                 if doc_id in data:
+#                     doc = data[doc_id]
+#                     file.write(f"Row {doc_id}:\n")
+#                     file.write(f"Name: {doc.get('Name', 'N/A')}\n")
+#                     file.write(f"Price: {doc.get('Price', 'N/A')}\n")
+#                     file.write(f"Release_date: {doc.get('Release_date', 'N/A')}\n")
+#                     file.write("-" * 40 + "\n")
+#     print(f"Results saved to {filename}")
