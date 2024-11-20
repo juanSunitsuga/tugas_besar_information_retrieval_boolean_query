@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import math
 from collections import defaultdict
 from nltk.stem import PorterStemmer
 
@@ -17,10 +18,19 @@ def process_text(text):
     return [stemmer.stem(word) for word in words]
 
 
-# Dictionary to hold the inverted index
-inverted_index = defaultdict(list)
+# Helper function to extract Review_no from document content
+def extract_review_no(content):
+    match = re.search(r'Review_no: (\d+)', content)
+    return int(match.group(1)) if match else 1  # Default to 1 if not found
 
-# Process each document to populate the inverted index
+
+# Dictionary to hold term frequencies, document lengths, and review numbers
+doc_term_freq = defaultdict(lambda: defaultdict(int))
+doc_lengths = defaultdict(int)
+review_numbers = {}  # Store Review_no for each document
+document_count = 0
+
+# Process each document to populate term frequencies
 for filename in os.listdir(input_dir):
     if filename.endswith('.txt'):
         # Extract the document ID from the filename
@@ -31,18 +41,39 @@ for filename in os.listdir(input_dir):
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
+        # Extract Review_no for document rank
+        review_no = extract_review_no(content)
+        review_numbers[doc_id] = review_no
+
         # Tokenize, clean, and stem the content
         tokens = process_text(content)
+        document_count += 1
 
-        # Update the inverted index with document ID for each term
-        for token in set(tokens):  # Use set to avoid duplicate entries per document
-            inverted_index[token].append(doc_id)
+        # Calculate term frequencies and document length
+        for token in tokens:
+            doc_term_freq[doc_id][token] += 1
+            doc_lengths[doc_id] += 1
 
-# Convert dictionary to list for easier JSON serialization
-inverted_index = {term: sorted(docs) for term, docs in inverted_index.items()}
+# Calculate IDF for each term
+term_document_count = defaultdict(int)
+for doc_id, terms in doc_term_freq.items():
+    for term in terms.keys():
+        term_document_count[term] += 1
+
+idf = {term: math.log(document_count / (1 + term_document_count[term])) for term in term_document_count}
+
+# Build the inverted index with the desired structure
+inverted_index = {}
+for term, idf_value in idf.items():
+    postings = {}
+    for doc_id, terms in doc_term_freq.items():
+        if term in terms:
+            tf = doc_term_freq[doc_id][term] / doc_lengths[doc_id]
+            tfidf = tf * idf_value
+            postings[str(doc_id)] = tfidf
+    inverted_index[term] = {"idf": idf_value, "postings": postings}
 
 # Save the inverted index to a JSON file
-with open('../dataset/inverted_index.json', 'w', encoding='utf-8') as f:
+output_path = '../dataset/inverted_index.json'
+with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(inverted_index, f, indent=4)
-
-print("Inverted index created and saved to 'inverted_index.json'.")

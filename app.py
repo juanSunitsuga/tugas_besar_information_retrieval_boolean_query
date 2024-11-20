@@ -4,7 +4,7 @@ from Boolean import booleanQuerySteam
 app = Flask(__name__, template_folder='templates')
 
 # Load the inverted index and CSV data
-booleanQuerySteam.load_inverted_index("dataset/inverted_index.json")
+# booleanQuerySteam.load_inverted_index("dataset/ifidf_index.json")
 csv_data = booleanQuerySteam.load_csv_data("dataset/steam_uncleaned.csv")
 
 

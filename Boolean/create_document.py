@@ -17,18 +17,30 @@ steam_data['id'] = steam_data.index + 1  # Generate unique IDs starting from 1
 output_dir = '../dataset/document'
 os.makedirs(output_dir, exist_ok=True)
 
-# Create a document for each game using only the title and description
+# Create a document for each game with the specified structure
 for _, row in steam_data.iterrows():
     title = row['Name']
+    price = row['Price'] if 'Price' in row else "N/A"
+    release_date = row['Release_date'] if 'Release_date' in row else "N/A"
+    review_no = row['Review_no'] if 'Review_no' in row else "N/A"
+    review_type = row['Review_type'] if 'Review_type' in row else "N/A"
+    tags = row['Tags'] if 'Tags' in row else "N/A"
     description = row['Description']
+
     doc_id = row['id']
 
     # Clean the filename and create a full path
     filename = f"{doc_id}_{clean_filename(title)}.txt"
     file_path = os.path.join(output_dir, filename)
 
-    # Write the title and description to the file
+    # Write the details to the file
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(f"{title}\n\n{description}")
+        f.write(f"Name: {title}\n")
+        f.write(f"Price: {price}\n")
+        f.write(f"Release_date: {release_date}\n")
+        f.write(f"Review_no: {review_no}\n")
+        f.write(f"Review_type: {review_type}\n")
+        f.write(f"Tags: {tags}\n")
+        f.write(f"Description: {description}\n")
 
 print("Documents created successfully!")
