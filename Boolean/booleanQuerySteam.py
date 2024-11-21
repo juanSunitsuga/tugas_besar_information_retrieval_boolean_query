@@ -6,15 +6,11 @@ from nltk.stem import PorterStemmer
 import requests
 import re
 import os
-import requests
 
 # Global variable for inverted index
-inverted_index = {}
-
+from tugas_besar_information_retrieval_boolean_query.app import inverted_index
 
 # Get synonyms for a word using the Datamuse API
-
-
 def get_synonyms(word):
     url = f'https://api.datamuse.com/words?rel_syn={word}&max=10'
     try:
@@ -62,24 +58,26 @@ def translate_to_boolean_query(query):
 
 # Boolean search with ranking
 def boolean_search(query, document):
-    global inverted_index
+
     tokens = query.upper().split()
     translator = str.maketrans('', '', string.punctuation)
     filtered_tokens = [word.translate(translator) for word in tokens]
     stemmer = PorterStemmer()
     stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]
-
     result = None
     current_operation = 'AND'
 
     for token in stemmed_tokens:
+        print("token : ", token)
+        print("inverted_index : ", inverted_index)
         if token in {'AND', 'OR', 'NOT'}:
             current_operation = token  # Update the current operation
         else:
+            print("Masuk else")
             if token in inverted_index:
                 word_postings = inverted_index[token]["postings"]
                 word_set = set(map(int, word_postings.keys()))
-
+                print("Masuk else if")
                 if result is None:
                     result = word_set
                 elif current_operation == 'AND':
@@ -89,6 +87,7 @@ def boolean_search(query, document):
                 elif current_operation == 'NOT':
                     result -= word_set
             else:
+                print("Masuk else else")
                 # Fallback to synonyms or suggestions
                 synonyms = get_synonyms(token)
                 if synonyms:
