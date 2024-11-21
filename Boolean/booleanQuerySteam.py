@@ -173,9 +173,10 @@ def boolean_search(query):
     ranked_results.sort(key=lambda x: (-x[2], -x[1]))
 
     final_results = []
+    processed_doc_ids = set()  # A set to keep track of processed doc_ids
+
     for doc_id, score, rank in ranked_results:
-        # Check if the doc_id exists in document_data
-        if doc_id in document_data:
+        if doc_id in document_data and doc_id not in processed_doc_ids:
             final_results.append({
                 'id': doc_id,
                 'name': document_data[doc_id].get('Name', 'Unknown'),
@@ -185,6 +186,7 @@ def boolean_search(query):
                 'score': score,
                 'rank': rank
             })
+            processed_doc_ids.add(doc_id)  # Add the doc_id to the set to prevent duplicates
 
     return final_results
 
