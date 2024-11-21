@@ -1,53 +1,42 @@
 import difflib
 import json
-import csv
+import math
 import string
 from nltk.stem import PorterStemmer
+import requests
+import re
+import os
 import requests
 
 # Global variable for inverted index
 inverted_index = {}
 
 
-# Load the inverted index from a JSON file
-def load_inverted_index(file_path):
-    global inverted_index
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            inverted_index = json.load(f)
-    except FileNotFoundError:
-        print(f"Error: File not found at path {file_path}")
-    except json.JSONDecodeError:
-        print(f"Error: Failed to parse JSON from file {file_path}")
-
-
 # Get synonyms for a word using the Datamuse API
+
+
 def get_synonyms(word):
     url = f'https://api.datamuse.com/words?rel_syn={word}&max=10'
-    response = requests.get(url)
-    print(f"API Response: {response.json()}")
-    data = response.json()
-    synonyms = [item['word'] for item in data]
-    return synonyms
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()  # Raise an error for HTTP issues
+        data = response.json()  # Parse the JSON response
+        if data:  # Check if the response contains any data
+            synonyms = [item['word'] for item in data]
+            print(f"Synonyms for '{word}': {synonyms}")
+            return synonyms
+        else:
+            print(f"No synonyms found for '{word}'.")
+            return []
+    except requests.exceptions.RequestException as e:
+        print(f"Error: Failed to fetch synonyms for '{word}'. Exception: {e}")
+        return []
 
 
 # Find closest match using difflib
 def find_closest_match(term, candidates):
     matches = difflib.get_close_matches(term, candidates, n=1, cutoff=0.8)  # cutoff controls match similarity
     return matches[0] if matches else None
-
-
-# Load the CSV file and create a mapping of row index (document ID) to the information
-def load_csv_data(file_path):
-    data = {}
-    try:
-        with open(file_path, 'r', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for index, row in enumerate(reader, start=1):  # Start indexing from 1
-                data[index] = row  # Use row index as the document ID
-    except FileNotFoundError:
-        print(f"Error: File not found at path {file_path}")
-    return data
 
 
 # Translate a query to a Boolean form
@@ -71,7 +60,8 @@ def translate_to_boolean_query(query):
     return boolean_query
 
 
-def boolean_search(query):
+# Boolean search with ranking
+def boolean_search(query, document):
     global inverted_index
     tokens = query.upper().split()
     translator = str.maketrans('', '', string.punctuation)
@@ -83,30 +73,13 @@ def boolean_search(query):
     current_operation = 'AND'
 
     for token in stemmed_tokens:
-        if token == 'AND':
-            current_operation = 'AND'
-        elif token == 'OR':
-            current_operation = 'OR'
-        elif token == 'NOT':
-            current_operation = 'NOT'
+        if token in {'AND', 'OR', 'NOT'}:
+            current_operation = token  # Update the current operation
         else:
-            # First, check if the term is in the inverted index
-            if token not in inverted_index:
-                # Try to get synonyms for the term
-                synonyms = get_synonyms(token)
-                if synonyms:
-                    print(f"Did you mean one of these instead of '{token}'? {', '.join(synonyms)}")
-                    # Optionally, you could let the user choose or automatically try the first synonym
-                    token = synonyms[0]  # Choose the first synonym as a fallback
-                else:
-                    # If no synonyms found, use the closest match from difflib
-                    closest_match = find_closest_match(token, inverted_index.keys())
-                    if closest_match:
-                        print(f"Did you mean '{closest_match}' instead of '{token}'?")
-                        token = closest_match  # Use the closest match found by difflib
-
             if token in inverted_index:
-                word_set = set(map(int, inverted_index[token]))
+                word_postings = inverted_index[token]["postings"]
+                word_set = set(map(int, word_postings.keys()))
+
                 if result is None:
                     result = word_set
                 elif current_operation == 'AND':
@@ -115,7 +88,44 @@ def boolean_search(query):
                     result |= word_set
                 elif current_operation == 'NOT':
                     result -= word_set
-            elif current_operation == 'AND':
-                result = set()  # Clear result if no match found
+            else:
+                # Fallback to synonyms or suggestions
+                synonyms = get_synonyms(token)
+                if synonyms:
+                    token = synonyms[0]
+                else:
+                    closest_match = find_closest_match(token, inverted_index.keys())
+                    if closest_match:
+                        token = closest_match
+                    else:
+                        print(f"No results or suggestions for '{token}'. Skipping.")
 
-    return list(result) if result else []
+    if not result:
+        print("No results found for the query. Providing suggestions...")
+        return {"error": "No results found", "suggestions": []}
+
+    ranked_results = []
+    review_numbers = {
+        int(doc_id): extract_review_no(data.get('Review_no', doc_id))
+        for doc_id, data in document.items()
+    }
+    for doc_id in result:
+        doc_id_str = str(doc_id)
+        for token in stemmed_tokens:
+            if token in inverted_index:
+                postings = inverted_index[token]["postings"]
+                tfidf = postings.get(doc_id_str, 0)
+                rank = review_numbers.get(doc_id, 1)
+                weighted_score = tfidf * math.log(1 + rank)
+                ranked_results.append((doc_id, weighted_score, rank))
+
+    ranked_results.sort(key=lambda x: (-x[2], -x[1]))
+    return [(doc_id, score) for doc_id, score, rank in ranked_results]
+
+
+# Extract numeric review numbers from a review string
+def extract_review_no(review_string):
+    match = re.search(r'[\d,]+', review_string)
+    if match:
+        return int(match.group(0).replace(',', ''))
+    return 0
