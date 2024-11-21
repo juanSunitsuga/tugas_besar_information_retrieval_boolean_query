@@ -128,11 +128,9 @@ def boolean_search(query):
         if token in {'and', 'or', 'not'}:
             current_operation = token  # Update the current operation
         else:
-            print("Masuk else")
             if token in inverted_index:
                 word_postings = inverted_index[token]["postings"]
                 word_set = set(map(int, word_postings.keys()))
-                print("Masuk else if")
                 if result is None:
                     result = word_set
                 elif current_operation == 'and':
@@ -142,7 +140,6 @@ def boolean_search(query):
                 elif current_operation == 'not':
                     result -= word_set
             else:
-                print("Masuk else else")
                 # Fallback to synonyms or suggestions
                 synonyms = get_synonyms(token)
                 if synonyms:
@@ -177,6 +174,7 @@ def boolean_search(query):
 
     final_results = []
     for doc_id, score, rank in ranked_results:
+        # Check if the doc_id exists in document_data
         if doc_id in document_data:
             final_results.append({
                 'id': doc_id,
@@ -187,6 +185,7 @@ def boolean_search(query):
                 'score': score,
                 'rank': rank
             })
+
     return final_results
 
 

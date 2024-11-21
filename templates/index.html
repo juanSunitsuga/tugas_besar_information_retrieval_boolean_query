@@ -46,8 +46,9 @@
             {% endif %}
 
             {% if page * per_page < total_results %}
-            <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn prev-btn">Next</a>
+            <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn next-btn">Next</a>
             {% endif %}
+
         </div>
         {% endif %}
     </form>
