@@ -1,11 +1,9 @@
 import difflib
-import json
 import math
 import string
 from nltk.stem import PorterStemmer
 import requests
 import re
-import os
 
 # Global variable for inverted index
 from tugas_besar_information_retrieval_boolean_query.app import inverted_index
@@ -65,12 +63,11 @@ def boolean_search(query, document):
     stemmer = PorterStemmer()
     stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]
     result = None
-    current_operation = 'AND'
+    current_operation = 'and'
 
     for token in stemmed_tokens:
         print("token : ", token)
-        print("inverted_index : ", inverted_index)
-        if token in {'AND', 'OR', 'NOT'}:
+        if token in {'and', 'or', 'not'}:
             current_operation = token  # Update the current operation
         else:
             print("Masuk else")
@@ -80,11 +77,11 @@ def boolean_search(query, document):
                 print("Masuk else if")
                 if result is None:
                     result = word_set
-                elif current_operation == 'AND':
+                elif current_operation == 'and':
                     result &= word_set
-                elif current_operation == 'OR':
+                elif current_operation == 'or':
                     result |= word_set
-                elif current_operation == 'NOT':
+                elif current_operation == 'not':
                     result -= word_set
             else:
                 print("Masuk else else")
