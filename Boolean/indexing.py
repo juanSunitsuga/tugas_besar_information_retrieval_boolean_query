@@ -1,36 +1,42 @@
 import os
-import re
 import json
-import math
-from collections import defaultdict
-from nltk.stem import PorterStemmer
+import re
 
-# Initialize the Porter Stemmer for stemming words
-stemmer = PorterStemmer()
+import torch
+from transformers import BertTokenizer, BertModel
+
+# Load pre-trained BERT model and tokenizer
+model_name = "bert-base-uncased"
+tokenizer = BertTokenizer.from_pretrained(model_name)
+model = BertModel.from_pretrained(model_name)
+model.eval()
+print("eval done")
 
 # Define the directory containing the documents
 input_dir = '../dataset/document'
 
+# Dictionary to store document embeddings and other metadata
+doc_embeddings = {}
+review_numbers = {}  # Store Review_no for each document
+document_count = 0
 
-# Function to tokenize, remove punctuation, and stem words
-def process_text(text):
-    words = re.findall(r'\b\w+\b', text.lower())
-    return [stemmer.stem(word) for word in words]
 
-
-# Helper function to extract Review_no from document content
+# Function to extract Review_no from document content
 def extract_review_no(content):
     match = re.search(r'Review_no: (\d+)', content)
     return int(match.group(1)) if match else 1  # Default to 1 if not found
 
 
-# Dictionary to hold term frequencies, document lengths, and review numbers
-doc_term_freq = defaultdict(lambda: defaultdict(int))
-doc_lengths = defaultdict(int)
-review_numbers = {}  # Store Review_no for each document
-document_count = 0
+# Function to compute BERT embeddings for a text
+def compute_bert_embedding(text):
+    tokens = tokenizer(text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
+    with torch.no_grad():
+        outputs = model(**tokens)
+    # Use the [CLS] token's representation as the document embedding
+    return outputs.last_hidden_state[:, 0, :].squeeze().numpy()
 
-# Process each document to populate term frequencies
+
+# Process each document to extract embeddings
 for filename in os.listdir(input_dir):
     if filename.endswith('.txt'):
         # Extract the document ID from the filename
@@ -45,35 +51,18 @@ for filename in os.listdir(input_dir):
         review_no = extract_review_no(content)
         review_numbers[doc_id] = review_no
 
-        # Tokenize, clean, and stem the content
-        tokens = process_text(content)
+        # Compute BERT embedding for the document
+        doc_embedding = compute_bert_embedding(content)
+        doc_embeddings[doc_id] = {
+            "review_no": review_no,
+            "embedding": doc_embedding.tolist()  # Convert to list for JSON serialization
+        }
+        print(f"Document {doc_id} processed")
         document_count += 1
 
-        # Calculate term frequencies and document length
-        for token in tokens:
-            doc_term_freq[doc_id][token] += 1
-            doc_lengths[doc_id] += 1
-
-# Calculate IDF for each term
-term_document_count = defaultdict(int)
-for doc_id, terms in doc_term_freq.items():
-    for term in terms.keys():
-        term_document_count[term] += 1
-
-idf = {term: math.log(document_count / (1 + term_document_count[term])) for term in term_document_count}
-
-# Build the inverted index with the desired structure
-inverted_index = {}
-for term, idf_value in idf.items():
-    postings = {}
-    for doc_id, terms in doc_term_freq.items():
-        if term in terms:
-            tf = doc_term_freq[doc_id][term] / doc_lengths[doc_id]
-            tfidf = tf * idf_value
-            postings[str(doc_id)] = tfidf
-    inverted_index[term] = {"idf": idf_value, "postings": postings}
-
-# Save the inverted index to a JSON file
-output_path = '../dataset/inverted_index.json'
+# Save the BERT-based index to a JSON file
+output_path = '../dataset/bert_inverted_index.json'
 with open(output_path, 'w', encoding='utf-8') as f:
-    json.dump(inverted_index, f, indent=4)
+    json.dump(doc_embeddings, f, indent=4)
+
+print(f"BERT-based inverted index saved to {output_path}")
