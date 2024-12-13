@@ -1,7 +1,6 @@
 import json
 import os
 import re
-import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer, AutoModel
 import torch
@@ -34,6 +33,13 @@ def load_inverted_index(file_path):
 
 
 # Load document data from the `dataset/document` directory
+
+def sanitize_filename(filename):
+    # Remove or replace invalid characters for filesystem
+    return re.sub(r'[^\w\s\.-]', '', filename)  # Removes invalid characters
+
+
+# Load document data from the `dataset/document` directory
 def load_document_data(directory_path):
     global document_data
     if os.path.exists(directory_path):
@@ -42,10 +48,15 @@ def load_document_data(directory_path):
                 match = re.match(r"(\d+)_", filename)
                 if match:
                     doc_id = int(match.group(1))
+                    sanitized_name = sanitize_filename(filename)
                     file_path = os.path.join(directory_path, filename)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                        document_data[doc_id] = parse_document_content(content)
+                        document_data[doc_id] = {
+                            'original_name': filename,
+                            'sanitized_name': sanitized_name,
+                            'data': parse_document_content(content)
+                        }
         print("Document data loaded successfully.")
     else:
         print(f"Error: Directory {directory_path} not found.")

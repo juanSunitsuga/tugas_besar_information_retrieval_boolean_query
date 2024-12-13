@@ -1,23 +1,24 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from Controller import booleanQuerySteam
 from Controller import embeddedQuerySteam
 
 app = Flask(__name__, template_folder='templates')
 
 
+# Route for the main index page
 @app.route('/')
 def index():
     return render_template('index.html')
 
 
+# Route to handle search functionality
+@app.route('/search', methods=['GET', 'POST'])
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
-        # Process the search query and method from the form submission
         query = request.form['query']
-        method = request.form.get('method', 'boolean')  # Default to Controller if no method is selected
+        method = request.form.get('method', 'boolean')
 
-        # Call the appropriate search function based on the method
         if method == 'boolean':
             results = booleanQuerySteam.boolean_search(query)
         elif method == 'embedding':
@@ -28,13 +29,11 @@ def search():
         if isinstance(results, dict) and 'error' in results:
             return jsonify(results)
 
-        # Set up pagination
-        page = 1  # First page for new search
-    else:  # Handle GET requests for pagination
-        query = request.args.get('query', '')  # Retrieve the query from the URL parameters
-        method = request.args.get('method', 'boolean')  # Retrieve the method from the URL parameters
+        page = 1
+    else:
+        query = request.args.get('query', '')
+        method = request.args.get('method', 'boolean')
 
-        # Call the appropriate search function based on the method
         if method == 'boolean':
             results = booleanQuerySteam.boolean_search(query)
         elif method == 'embedding':
@@ -45,14 +44,19 @@ def search():
         if isinstance(results, dict) and 'error' in results:
             return jsonify(results)
 
-        page = int(request.args.get('page', 1))  # Retrieve the current page from the URL parameters
+        page = int(request.args.get('page', 1))
 
-    # Pagination logic
     per_page = 10
     total_results = len(results)
     start = (page - 1) * per_page
     end = start + per_page
     paginated_results = results[start:end]
+
+    # Add sanitized names for links
+    for result in paginated_results:
+        doc_id = result['id']
+        result['original_name'] = booleanQuerySteam.document_data[doc_id]['original_name']
+        result['sanitized_name'] = booleanQuerySteam.document_data[doc_id]['sanitized_name']
 
     return render_template(
         'index.html',
@@ -65,5 +69,13 @@ def search():
     )
 
 
+
+# Serve static files for the dataset/document directory
+@app.route('/dataset/document/<path:filename>')
+def serve_document(filename):
+    return send_from_directory('dataset/document', filename)
+
+
+# Run the application
 if __name__ == '__main__':
     app.run()

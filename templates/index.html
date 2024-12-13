@@ -37,9 +37,10 @@
             <ul id="resultsList">
                 {% for result in results %}
                 <li>
-                    <strong>{{ result.name }}</strong> <br>
+                    <a href="/dataset/document/{{ result.sanitized_name }}" target="_blank"><strong>{{ result.name }}</strong> </a><br>
                     Price: {{ result.price }} <br>
-                    Release Date: {{ result.release_date }}
+                    Release Date: {{ result.release_date }} <br>
+                    Score : {{ results.score }}
                 </li>
                 {% endfor %}
             </ul>
