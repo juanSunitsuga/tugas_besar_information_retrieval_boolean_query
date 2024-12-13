@@ -98,11 +98,10 @@ def embedding_search(query, top_k=5):
 
     results = []
     for doc_id, doc_data in inverted_index.items():
-        doc_embedding = doc_data.get("embedding", [])
-        if not doc_embedding:
+        if not isinstance(doc_data, list):  # Ensure it's a list
             continue
 
-        # Compute similarity
+        doc_embedding = doc_data  # Use directly since it's a list
         similarity = cosine_similarity([query_embedding], [doc_embedding])[0][0]
         results.append((int(doc_id), similarity))
 
@@ -126,5 +125,5 @@ def embedding_search(query, top_k=5):
 
 
 # Initial data loading
-load_inverted_index("dataset/bert_inverted_index.json")
+load_inverted_index("dataset/pretrained_steam_review_embeddings.json")
 load_document_data("dataset/document")

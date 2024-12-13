@@ -101,7 +101,18 @@ def boolean_search(query):
 
     ranked_results.sort(key=lambda x: -x[1])
 
-    return [{'id': doc_id, 'score': score} for doc_id, score in ranked_results]
+    # Add metadata for each document
+    return [
+        {
+            'id': doc_id,
+            'score': score,
+            'name': document_data[doc_id].get('Name', 'Unknown'),
+            'price': document_data[doc_id].get('Price', 'Unknown'),
+            'release_date': document_data[doc_id].get('Release_date', 'Unknown'),
+            'review_no': document_data[doc_id].get('Review_no', 'Unknown')
+        }
+        for doc_id, score in ranked_results
+    ]
 
 
 # Initial data loading
