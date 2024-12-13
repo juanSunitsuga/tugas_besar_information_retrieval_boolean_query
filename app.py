@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
-from Boolean import booleanQuerySteam
+from Controller import booleanQuerySteam
+from Controller import embeddedQuerySteam
 
 app = Flask(__name__, template_folder='templates')
 
@@ -12,9 +13,17 @@ def index():
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
-        # Process the search query from the form submission
+        # Process the search query and method from the form submission
         query = request.form['query']
-        results = booleanQuerySteam.boolean_search(query)
+        method = request.form.get('method', 'boolean')  # Default to Controller if no method is selected
+
+        # Call the appropriate search function based on the method
+        if method == 'boolean':
+            results = booleanQuerySteam.boolean_search(query)
+        elif method == 'embedding':
+            results = embeddedQuerySteam.embedding_search(query)
+        else:
+            return jsonify({"error": f"Unsupported search method '{method}'."})
 
         if isinstance(results, dict) and 'error' in results:
             return jsonify(results)
@@ -23,7 +32,15 @@ def search():
         page = 1  # First page for new search
     else:  # Handle GET requests for pagination
         query = request.args.get('query', '')  # Retrieve the query from the URL parameters
-        results = booleanQuerySteam.boolean_search(query)
+        method = request.args.get('method', 'boolean')  # Retrieve the method from the URL parameters
+
+        # Call the appropriate search function based on the method
+        if method == 'boolean':
+            results = booleanQuerySteam.boolean_search(query)
+        elif method == 'embedding':
+            results = embeddedQuerySteam.embedding_search(query)
+        else:
+            return jsonify({"error": f"Unsupported search method '{method}'."})
 
         if isinstance(results, dict) and 'error' in results:
             return jsonify(results)
@@ -43,7 +60,8 @@ def search():
         results=paginated_results,
         total_results=total_results,
         page=page,
-        per_page=per_page
+        per_page=per_page,
+        method=method
     )
 
 
