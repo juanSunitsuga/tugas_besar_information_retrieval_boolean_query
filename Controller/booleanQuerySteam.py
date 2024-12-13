@@ -106,4 +106,4 @@ def boolean_search(query):
 
 # Initial data loading
 load_inverted_index("dataset/inverted_index_ai.json")
-document_data = load_document_data("dataset/document")
+load_document_data("dataset/document")
