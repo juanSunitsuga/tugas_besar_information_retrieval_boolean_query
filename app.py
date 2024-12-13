@@ -69,7 +69,6 @@ def search():
     )
 
 
-
 # Serve static files for the dataset/document directory
 @app.route('/dataset/document/<path:filename>')
 def serve_document(filename):
