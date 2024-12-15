@@ -40,7 +40,14 @@
                     <a href="/dataset/document/{{ result.sanitized_name }}" target="_blank"><strong>{{ result.name }}</strong> </a><br>
                     Price: {{ result.price }} <br>
                     Release Date: {{ result.release_date }} <br>
-                    Score : {{ results.score }}
+                    Score: 
+                    {% if result.score %}
+                        {{ result.score }}  <!-- Boolean query score -->
+                    {% elif result.similarity %}
+                        {{ result.similarity }}  <!-- Embedding query similarity -->
+                    {% else %}
+                        N/A  <!-- In case no score or similarity is available -->
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
