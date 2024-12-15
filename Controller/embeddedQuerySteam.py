@@ -74,12 +74,16 @@ def parse_document_content(content):
             data['Release_date'] = line.split("Release_date:", 1)[1].strip()
         elif "Review_no:" in line:
             data['Review_no'] = line.split("Review_no:", 1)[1].strip()
+
+    # Set defaults for missing fields
+    data.setdefault('Name', 'Unknown')
+    data.setdefault('Price', 'Unknown')
+    data.setdefault('Release_date', 'Unknown')
+    data.setdefault('Review_no', 'Unknown')
+
     return data
 
 
-# Generate embedding for a query
-# def get_query_embedding(query):
-#     return model.encode(query)
 def get_query_embedding(query):
     """
     Generates a 768-dimensional embedding for the input query using a pre-trained BERT model.
@@ -103,16 +107,13 @@ def embedding_search(query, top_k=5):
         print("Error: Inverted index is empty or not loaded.")
         return {"error": "Inverted index not loaded."}
 
-    query = "youtube"
     query_embedding = get_query_embedding(query)
-    print(query_embedding)  # Check if the embedding is meaningful (not all zeros or NaNs)
 
     results = []
-    for doc_id, doc_data in inverted_index.items():
-        if not isinstance(doc_data, list):  # Ensure it's a list
+    for doc_id, doc_embedding in inverted_index.items():
+        if not isinstance(doc_embedding, list):  # Ensure it's a valid list
             continue
 
-        doc_embedding = doc_data  # Use directly since it's a list
         similarity = cosine_similarity([query_embedding], [doc_embedding])[0][0]
         results.append((int(doc_id), similarity))
 
@@ -122,17 +123,18 @@ def embedding_search(query, top_k=5):
     # Prepare the final results with metadata from `document_data`
     final_results = []
     for doc_id, similarity in results[:top_k]:
-        if doc_id in document_data:
-            final_results.append({
-                'id': doc_id,
-                'name': document_data[doc_id].get('Name', 'Unknown'),
-                'price': document_data[doc_id].get('Price', 'Unknown'),
-                'release_date': document_data[doc_id].get('Release_date', 'Unknown'),
-                'review_no': document_data[doc_id].get('Review_no', 'Unknown'),
-                'similarity': similarity
-            })
+        document = document_data.get(doc_id, {}).get('data', {})
+        final_results.append({
+            'id': doc_id,
+            'name': document.get('Name', 'Unknown'),
+            'price': document.get('Price', 'Unknown'),
+            'release_date': document.get('Release_date', 'Unknown'),
+            'review_no': document.get('Review_no', 'Unknown'),
+            'similarity': similarity
+        })
 
     return final_results
+
 
 
 # Initial data loading
