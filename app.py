@@ -55,8 +55,9 @@ def search():
     # Add sanitized names for links
     for result in paginated_results:
         doc_id = result['id']
-        result['original_name'] = booleanQuerySteam.document_data[doc_id]['original_name']
-        result['sanitized_name'] = booleanQuerySteam.document_data[doc_id]['sanitized_name']
+        document = booleanQuerySteam.document_data.get(doc_id, {})
+        result['original_name'] = document.get('original_name', 'Unknown')
+        result['sanitized_name'] = document.get('sanitized_name', 'unknown')
 
     return render_template(
         'index.html',

@@ -1,13 +1,8 @@
 import json
 import os
+import string
 import re
-from sklearn.metrics.pairwise import cosine_similarity
-from transformers import AutoTokenizer, AutoModel
-import torch
-
-# Load pre-trained BERT model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-model = AutoModel.from_pretrained("bert-base-uncased")
+from nltk.stem import PorterStemmer
 
 # Global variables to hold loaded data
 inverted_index = {}
@@ -28,12 +23,7 @@ def load_inverted_index(file_path):
         print(f"Error: File {file_path} not found.")
 
 
-# Sanitize filenames for compatibility
-def sanitize_filename(filename):
-    return re.sub(r'[^\w\s\.-]', '', filename)
-
-
-# Load document data
+# Load document data from the `dataset/document` directory
 def load_document_data(directory_path):
     global document_data
     if os.path.exists(directory_path):
@@ -42,88 +32,107 @@ def load_document_data(directory_path):
                 match = re.match(r"(\d+)_", filename)
                 if match:
                     doc_id = int(match.group(1))
-                    sanitized_name = sanitize_filename(filename)
                     file_path = os.path.join(directory_path, filename)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                         document_data[doc_id] = {
-                            'original_name': filename,
-                            'sanitized_name': sanitized_name,
-                            'data': parse_document_content(content)
+                            'original_name': filename,  # Preserve original filename
+                            **parse_document_content(content)
                         }
         print("Document data loaded successfully.")
     else:
         print(f"Error: Directory {directory_path} not found.")
 
 
-# Parse document content for metadata
+# Parse the content of a document for specific fields
 def parse_document_content(content):
     data = {}
     for line in content.splitlines():
+        line = line.strip()
         if "Name:" in line:
-            data['Name'] = line.split("Name:", 1)[1].strip()
+            name = line.split("Name:", 1)[1].strip()
+            data['Name'] = name
+            data['original_name'] = name
+            # Generate sanitized_name (replace spaces and special chars with `_`)
+            data['sanitized_name'] = re.sub(r'[^a-zA-Z0-9]', '_', name)
         elif "Price:" in line:
             data['Price'] = line.split("Price:", 1)[1].strip()
         elif "Release_date:" in line:
             data['Release_date'] = line.split("Release_date:", 1)[1].strip()
         elif "Review_no:" in line:
             data['Review_no'] = line.split("Review_no:", 1)[1].strip()
-    # Ensure defaults for missing fields
+
+    # Ensure all fields have default values if missing
     data.setdefault('Name', 'Unknown')
+    data.setdefault('original_name', 'Unknown')
+    data.setdefault('sanitized_name', 'unknown')
     data.setdefault('Price', 'Unknown')
     data.setdefault('Release_date', 'Unknown')
     data.setdefault('Review_no', 'Unknown')
+
     return data
 
 
-# Generate query embedding
-def get_query_embedding(query):
-    inputs = tokenizer(query, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    cls_embedding = outputs.last_hidden_state[:, 0, :].squeeze().numpy()
-    return cls_embedding
 
+# Boolean search with ranking
+def boolean_search(query):
+    tokens = query.upper().split()
+    translator = str.maketrans('', '', string.punctuation)
+    filtered_tokens = [word.translate(translator) for word in tokens]
+    stemmer = PorterStemmer()
+    stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]
+    result = None
+    current_operation = 'and'
 
-# Embedding search
-def embedding_search(query, top_k=5):
-    if not inverted_index:
-        print("Error: Inverted index is empty or not loaded.")
-        return {"error": "Inverted index not loaded."}
+    for token in stemmed_tokens:
+        if token in {'and', 'or', 'not'}:
+            current_operation = token  # Update the current operation
+        else:
+            if token in inverted_index:
+                word_postings = inverted_index[token]["postings"]
+                word_set = set(map(int, word_postings.keys()))
+            else:
+                word_set = set()
 
-    query_embedding = get_query_embedding(query)
-    if query_embedding is None or len(query_embedding) == 0:
-        print("Error: Failed to generate query embedding.")
-        return {"error": "Failed to generate query embedding."}
+            if result is None:
+                result = word_set
+            elif current_operation == 'and':
+                result &= word_set
+            elif current_operation == 'or':
+                result |= word_set
+            elif current_operation == 'not':
+                result -= word_set
 
-    results = []
-    for doc_id, doc_embedding in inverted_index.items():
-        if not isinstance(doc_embedding, list) or len(doc_embedding) != len(query_embedding):
-            continue  # Skip invalid embeddings
-        similarity = cosine_similarity([query_embedding], [doc_embedding])[0][0]
-        results.append((int(doc_id), similarity))
+    if not result:
+        print("No results found for the query.")
+        return []
 
-    # Sort results by similarity score in descending order
-    results = sorted(results, key=lambda x: -x[1])
+    ranked_results = []
+    for doc_id in result:
+        doc_id_str = str(doc_id)
+        score = 0
+        for token in stemmed_tokens:
+            if token in inverted_index:
+                postings = inverted_index[token]["postings"]
+                score += postings.get(doc_id_str, 0)
+        ranked_results.append((doc_id, score))
 
-    # Prepare results with metadata
-    final_results = []
-    for doc_id, similarity in results[:top_k]:
-        if doc_id in document_data:
-            doc_metadata = document_data[doc_id]['data']
-            final_results.append({
-                'id': doc_id,
-                'name': doc_metadata.get('Name', 'Unknown'),
-                'price': doc_metadata.get('Price', 'Unknown'),
-                'release_date': doc_metadata.get('Release_date', 'Unknown'),
-                'review_no': doc_metadata.get('Review_no', 'Unknown'),
-                'similarity': similarity,
-                'path': f"dataset/document/{document_data[doc_id]['sanitized_name']}"
-            })
+    ranked_results.sort(key=lambda x: -x[1])
 
-    return final_results
+    return [
+        {
+            'id': doc_id,
+            'score': score,
+            'original_name': document_data[doc_id].get('original_name', 'Unknown'),
+            'name': document_data[doc_id].get('Name', 'Unknown'),
+            'price': document_data[doc_id].get('Price', 'Unknown'),
+            'release_date': document_data[doc_id].get('Release_date', 'Unknown'),
+            'review_no': document_data[doc_id].get('Review_no', 'Unknown')
+        }
+        for doc_id, score in ranked_results
+    ]
 
 
 # Initial data loading
-load_inverted_index("dataset/pretrained_steam_review_embeddings.json")
+load_inverted_index("dataset/inverted_index_ai.json")
 load_document_data("dataset/document")
