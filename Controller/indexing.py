@@ -11,6 +11,7 @@ stemmer = PorterStemmer()
 
 # Define the directory containing the documents
 input_dir = '../dataset/document'
+# input_dir = 'dataset/document' #Khusus Untuk William FI
 
 
 # Function to tokenize, remove punctuation, and stem words
@@ -110,6 +111,7 @@ for term, idf_value in idf.items():
 
 # Save the inverted index to a JSON file
 output_path = '../dataset/inverted_index.json'
+# output_path = 'dataset/inverted_index.json' #Khusus Untuk William FI
 with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(inverted_index, f, indent=4)
 
