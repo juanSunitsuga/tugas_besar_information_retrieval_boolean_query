@@ -23,6 +23,11 @@ def load_inverted_index(file_path):
         print(f"Error: File {file_path} not found.")
 
 
+def sanitize_filename(filename):
+    # Remove or replace invalid characters for filesystem
+    return re.sub(r'[^\w\s\.-]', '', filename)  # Removes invalid characters
+
+
 # Load document data from the `dataset/document` directory
 def load_document_data(directory_path):
     global document_data
@@ -32,12 +37,14 @@ def load_document_data(directory_path):
                 match = re.match(r"(\d+)_", filename)
                 if match:
                     doc_id = int(match.group(1))
+                    sanitized_name = sanitize_filename(filename)
                     file_path = os.path.join(directory_path, filename)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                         document_data[doc_id] = {
-                            'original_name': filename,  # Preserve original filename
-                            **parse_document_content(content)
+                            'original_name': filename,
+                            'sanitized_name': sanitized_name,
+                            'data': parse_document_content(content)
                         }
         print("Document data loaded successfully.")
     else:
@@ -50,31 +57,23 @@ def parse_document_content(content):
     for line in content.splitlines():
         line = line.strip()
         if "Name:" in line:
-            name = line.split("Name:", 1)[1].strip()
-            data['Name'] = name
-            data['original_name'] = name
-            # Generate sanitized_name (replace spaces and special chars with `_`)
-            data['sanitized_name'] = re.sub(r'[^a-zA-Z0-9]', '_', name)
+            data['Name'] = line.split("Name:", 1)[1].strip()
         elif "Price:" in line:
             data['Price'] = line.split("Price:", 1)[1].strip()
         elif "Release_date:" in line:
             data['Release_date'] = line.split("Release_date:", 1)[1].strip()
         elif "Review_no:" in line:
             data['Review_no'] = line.split("Review_no:", 1)[1].strip()
-
     # Ensure all fields have default values if missing
     data.setdefault('Name', 'Unknown')
-    data.setdefault('original_name', 'Unknown')
-    data.setdefault('sanitized_name', 'unknown')
     data.setdefault('Price', 'Unknown')
     data.setdefault('Release_date', 'Unknown')
     data.setdefault('Review_no', 'Unknown')
-
     return data
 
 
 
-# Boolean search with ranking
+# Controller search with ranking
 def boolean_search(query):
     tokens = query.upper().split()
     translator = str.maketrans('', '', string.punctuation)
@@ -119,15 +118,16 @@ def boolean_search(query):
 
     ranked_results.sort(key=lambda x: -x[1])
 
+    # Add metadata and document path
     return [
         {
             'id': doc_id,
             'score': score,
-            'original_name': document_data[doc_id].get('original_name', 'Unknown'),
-            'name': document_data[doc_id].get('Name', 'Unknown'),
-            'price': document_data[doc_id].get('Price', 'Unknown'),
-            'release_date': document_data[doc_id].get('Release_date', 'Unknown'),
-            'review_no': document_data[doc_id].get('Review_no', 'Unknown')
+            'name': document_data[doc_id]['data'].get('Name', 'Unknown'),
+            'price': document_data[doc_id]['data'].get('Price', 'Unknown'),
+            'release_date': document_data[doc_id]['data'].get('Release_date', 'Unknown'),
+            'review_no': document_data[doc_id]['data'].get('Review_no', 'Unknown'),
+            'path': f"dataset/document/{document_data[doc_id]['sanitized_name']}"
         }
         for doc_id, score in ranked_results
     ]
