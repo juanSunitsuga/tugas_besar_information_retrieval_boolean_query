@@ -22,6 +22,10 @@
                     </svg>
                 </div>
                 <input id="search" type="text" name="query" placeholder="What are you looking for?"/>
+                <select name="method" class="input-field first-wrap">
+                    <option value="boolean" selected>Boolean Search</option>
+                    <option value="embedding">Embedding Search</option>
+                </select>
             </div>
             <div class="input-field second-wrap">
                 <button class="btn-search" type="submit">SEARCH</button>
@@ -29,13 +33,21 @@
         </div>
         {% if results %}
         <div class="results">
-            <h2>Search Results</h2>
+            <h2>Search Results for <i style = 'color: gray'>'{{ query }}'</i></h2>
             <ul id="resultsList">
                 {% for result in results %}
                 <li>
-                    <strong>{{ result.name }}</strong> <br>
+                    <a href="/dataset/document/{{ result.sanitized_name }}" target="_blank"><strong>{{ result.name }}</strong> </a><br>
                     Price: {{ result.price }} <br>
-                    Release Date: {{ result.release_date }}
+                    Release Date: {{ result.release_date }} <br>
+                    Score: 
+                    {% if result.score %}
+                        {{ result.score }}  <!-- Boolean query score -->
+                    {% elif result.similarity %}
+                        {{ result.similarity }}  <!-- Embedding query similarity -->
+                    {% else %}
+                        N/A  <!-- In case no score or similarity is available -->
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
@@ -46,8 +58,9 @@
             {% endif %}
 
             {% if page * per_page < total_results %}
-            <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn prev-btn">Next</a>
+            <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn next-btn">Next</a>
             {% endif %}
+
         </div>
         {% endif %}
     </form>
