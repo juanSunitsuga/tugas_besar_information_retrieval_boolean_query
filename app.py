@@ -103,12 +103,18 @@ def parse_txt_file(file_path):
 # Route to display game details dynamically
 @app.route('/game_details.html/<string:path>')
 def game_details(path):
-    real_path = "/dataset/document/",path
+    # Build the correct file path
+    real_path = os.path.join("dataset", "document", path)
+    
+    # Parse the file to get game details
     file_content = parse_txt_file(real_path)
 
-    print(file_content)
+    if not file_content:
+        return "Game details not found", 404
 
+    # Pass the parsed data to the game_details template
     return render_template('game_details.html', game=file_content)
+
 
 
 # Run the application
