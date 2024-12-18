@@ -1,18 +1,16 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from Controller import booleanQuerySteam
 from Controller import embeddedQuerySteam
+import os
 
 app = Flask(__name__, template_folder='templates')
-
 
 # Route for the main index page
 @app.route('/')
 def index():
     return render_template('index.html')
 
-
 # Route to handle search functionality
-@app.route('/search', methods=['GET', 'POST'])
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
@@ -69,11 +67,48 @@ def search():
         method=method
     )
 
+# Function to parse the .txt file
+def parse_txt_file(file_path):
+    data = {}
 
-# Serve static files for the dataset/document directory
-@app.route('/dataset/document/<path:filename>')
-def serve_document(filename):
-    return send_from_directory('dataset/document', filename)
+    try:
+        with open(file_path, 'r') as file:
+            # Read the lines of the file
+            lines = file.readlines()
+
+            # Extract information from each line
+            for line in lines:
+                if line.startswith("Name:"):
+                    data['name'] = line[len("Name:"):].strip()
+                elif line.startswith("Price:"):
+                    data['price'] = line[len("Price:"):].strip()
+                elif line.startswith("Release_date:"):
+                    data['release_date'] = line[len("Release_date:"):].strip()
+                elif line.startswith("Review_no:"):
+                    data['review_no'] = line[len("Review_no:"):].strip()
+                elif line.startswith("Review_type:"):
+                    data['review_type'] = line[len("Review_type:"):].strip()
+                elif line.startswith("Tags:"):
+                    data['tags'] = line[len("Tags:"):].strip()
+                elif line.startswith("Description:"):
+                    data['description'] = line[len("Description:"):].strip()
+    except FileNotFoundError:
+        data = None
+    except Exception as e:
+        print(f"Error reading the file: {e}")
+        data = None
+
+    return data
+
+# Route to display game details dynamically
+@app.route('/game_details.html/<string:path>')
+def game_details(path):
+    real_path = "/dataset/document/",path
+    file_content = parse_txt_file(real_path)
+
+    print(file_content)
+
+    return render_template('game_details.html', game=file_content)
 
 
 # Run the application

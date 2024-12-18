@@ -37,7 +37,7 @@
             <ul id="resultsList">
                 {% for result in results %}
                 <li>
-                    <a href="/dataset/document/{{ result.sanitized_name }}" target="_blank"><strong>{{ result.name }}</strong> </a><br>
+                    <a href="{{url_for('game_details', path=result.sanitized_name) }}" target="_blank"><strong>{{ result.name }}</strong> </a><br>
                     Price: {{ result.price }} <br>
                     Release Date: {{ result.release_date }} <br>
                     Score: 
