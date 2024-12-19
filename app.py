@@ -1,14 +1,19 @@
+import re
+
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from Controller import booleanQuerySteam
 from Controller import embeddedQuerySteam
+from Controller import relatedGameRecommendation
 import os
 
 app = Flask(__name__, template_folder='templates')
+
 
 # Route for the main index page
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 # Route to handle search functionality
 @app.route('/search', methods=['GET', 'POST'])
@@ -67,16 +72,13 @@ def search():
         method=method
     )
 
-# Function to parse the .txt file
+
+# Function to parse game details
 def parse_txt_file(file_path):
     data = {}
-
     try:
         with open(file_path, 'r') as file:
-            # Read the lines of the file
             lines = file.readlines()
-
-            # Extract information from each line
             for line in lines:
                 if line.startswith("Name:"):
                     data['name'] = line[len("Name:"):].strip()
@@ -94,27 +96,40 @@ def parse_txt_file(file_path):
                     data['description'] = line[len("Description:"):].strip()
     except FileNotFoundError:
         data = None
-    except Exception as e:
-        print(f"Error reading the file: {e}")
-        data = None
-
     return data
 
-# Route to display game details dynamically
+
+# Route to display game details and recommend related games
+# Extract leading number from a string
+def extract_numeric_value(input_string):
+    match = re.search(r'\d+', input_string)
+    return float(match.group()) if match else 0.0
+
+
 @app.route('/game_details.html/<string:path>')
 def game_details(path):
-    # Build the correct file path
+    # Build file path
     real_path = os.path.join("dataset", "document", path)
-    
-    # Parse the file to get game details
-    file_content = parse_txt_file(real_path)
 
-    if not file_content:
+    # Parse game details
+    game = parse_txt_file(real_path)
+    if not game:
         return "Game details not found", 404
 
-    # Pass the parsed data to the game_details template
-    return render_template('game_details.html', game=file_content)
+    # Extract tags and score for recommendation
+    tags = game.get("tags", "").split(", ")
+    raw_score = game.get("review_no", "0")  # Default to "0" if missing
+    score = extract_numeric_value(raw_score)  # Extract only the numeric part
 
+    # Get related games as 2D vectors
+    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, score, top_n=5)
+
+    # Render the template
+    return render_template(
+        'game_details.html',
+        game=game,
+        related_games=[vec['game'] for vec in related_game_vectors]
+    )
 
 
 # Run the application
