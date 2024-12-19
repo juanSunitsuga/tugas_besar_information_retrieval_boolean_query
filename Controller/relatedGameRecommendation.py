@@ -1,25 +1,23 @@
-from scipy.spatial.distance import euclidean
-import numpy as np
 from Controller import booleanQuerySteam
 
 
-def calculate_similarity(target_tags, target_score, doc_tags, doc_score, weight_tags=0.7, weight_score=0.3):
+def calculate_similarity(target_tags, target_price, doc_tags, doc_price, weight_tags=0.7, weight_score=0.3):
     """Calculate weighted similarity based on tags and score."""
     # Tag similarity (Jaccard index)
     tag_similarity = len(set(target_tags) & set(doc_tags)) / len(set(target_tags) | set(doc_tags))
 
     # Score similarity (inverted normalized difference)
-    score_similarity = 1 - abs(target_score - doc_score) / max(1, target_score, doc_score)
+    score_similarity = 1 - abs(target_price - doc_price) / max(1, target_price, doc_price)
 
     # Weighted similarity
     overall_similarity = weight_tags * tag_similarity + weight_score * score_similarity
     return tag_similarity, score_similarity, overall_similarity
 
 
-def recommend_related_games(target_game_tags, target_game_score, top_n=5):
+def recommend_related_games(target_game_tags, target_game_price, top_n=5, doc_id=None):
     """Find and recommend related games."""
     # Perform a boolean search for documents with matching tags
-    search_query = " OR ".join(target_game_tags)  # Example: "RPG OR Action OR Adventure"
+    search_query = " OR ".join(target_game_tags)
     search_results = booleanQuerySteam.boolean_search(search_query)
 
     if not search_results:
@@ -29,27 +27,30 @@ def recommend_related_games(target_game_tags, target_game_score, top_n=5):
 
     # Compare target game with search results
     for doc in search_results:
+        # x = doc.get('price', 0)
+        x = ''.join(c for c in doc.get('price', 0) if c in "1234567890.")
         doc_tags = booleanQuerySteam.inverted_index.get(doc['id'], {}).get("tags", [])
-        doc_score = float(doc.get('review_no', 0))  # Assume `review_no` is the score
-
+        doc_price = float(0 if len(x) == 0 else x)
         # Calculate similarity
         tag_similarity, score_similarity, overall_similarity = calculate_similarity(
             target_tags=target_game_tags,
-            target_score=target_game_score,
+            target_price=target_game_price,
             doc_tags=doc_tags,
-            doc_score=doc_score
+            doc_price=doc_price
         )
-
-        recommendations.append({
-            'id': doc['id'],
-            'name': doc['name'],
-            'price': doc['price'],
-            'release_date': doc['release_date'],
-            'path': doc['path'],
-            'tag_similarity': tag_similarity,
-            'score_similarity': score_similarity,
-            'overall_similarity': overall_similarity
-        })
+        if doc['id'] == int(doc_id):
+            continue
+        else:
+            recommendations.append({
+                'id': doc['id'],
+                'name': doc['name'],
+                'price': doc['price'],
+                'release_date': doc['release_date'],
+                'path': doc['rec_path'],
+                'tag_similarity': tag_similarity,
+                'score_similarity': score_similarity,
+                'overall_similarity': overall_similarity,
+            })
 
     # Sort by overall similarity and take the top N results
     recommendations.sort(key=lambda x: -x['overall_similarity'])

@@ -2,7 +2,6 @@ import re
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from Controller import booleanQuerySteam
-from Controller import embeddedQuerySteam
 from Controller import relatedGameRecommendation
 import os
 
@@ -24,8 +23,6 @@ def search():
 
         if method == 'boolean':
             results = booleanQuerySteam.boolean_search(query)
-        elif method == 'embedding':
-            results = embeddedQuerySteam.embedding_search(query)
         else:
             return jsonify({"error": f"Unsupported search method '{method}'."})
 
@@ -39,8 +36,6 @@ def search():
 
         if method == 'boolean':
             results = booleanQuerySteam.boolean_search(query)
-        elif method == 'embedding':
-            results = embeddedQuerySteam.embedding_search(query)
         else:
             return jsonify({"error": f"Unsupported search method '{method}'."})
 
@@ -117,12 +112,12 @@ def game_details(path):
         return "Game details not found", 404
 
     # Extract tags and score for recommendation
-    tags = game.get("tags", "").split(", ")
-    raw_score = game.get("review_no", "0")  # Default to "0" if missing
-    score = extract_numeric_value(raw_score)  # Extract only the numeric part
-
+    tags = game.get("tags", "").split(",")
+    price = game.get("price", "0")  # Default to "0" if missing
+    price = extract_numeric_value(price)  # Extract only the numeric part
+    doc_id = path.split("_")[0]
     # Get related games as 2D vectors
-    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, score, top_n=5)
+    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, price, 5, doc_id)
 
     # Render the template
     return render_template(
@@ -134,4 +129,4 @@ def game_details(path):
 
 # Run the application
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
