@@ -64,12 +64,18 @@ def parse_document_content(content):
             data['Release_date'] = line.split("Release_date:", 1)[1].strip()
         elif "Review_no:" in line:
             data['Review_no'] = line.split("Review_no:", 1)[1].strip()
+        elif "Tags:" in line:
+            data['Tags'] = line.split("Tags:", 1)[1].strip().split(",")
+
     # Ensure all fields have default values if missing
     data.setdefault('Name', 'Unknown')
     data.setdefault('Price', 'Unknown')
     data.setdefault('Release_date', 'Unknown')
     data.setdefault('Review_no', 'Unknown')
+    data.setdefault('Tags', 'Unknown')
+
     return data
+
 
 
 # Controller search with ranking
@@ -122,10 +128,12 @@ def boolean_search(query):
         {
             'id': doc_id,
             'score': score,
+            'original_name': document_data[doc_id].get('original_name', 'Unknown'),
             'name': document_data[doc_id]['data'].get('Name', 'Unknown'),
             'price': document_data[doc_id]['data'].get('Price', 'Unknown'),
             'release_date': document_data[doc_id]['data'].get('Release_date', 'Unknown'),
             'review_no': document_data[doc_id]['data'].get('Review_no', 'Unknown'),
+            'tags': document_data[doc_id].get('Tags', 'Unknown'),
             'path': f"dataset/document/{document_data[doc_id]['sanitized_name']}",
             'rec_path': f"{document_data[doc_id]['sanitized_name']}"
         }

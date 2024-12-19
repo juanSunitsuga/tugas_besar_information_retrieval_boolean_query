@@ -6,13 +6,14 @@
     <meta name="author" content="colorlib.com">
     <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
-    <script src="{{ url_for('static', filename='js/extention/choices.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extention/choices.js') }}">
+    </script>
     <title>Steam Game Search Engine</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/steam-logo-symbol.png') }}">
 </head>
 <body>
 <div class="s130">
-    <form method="POST" action="/search">
+    <form method="POST" action="/search" id="mainForm">
         <h1>Steam Games Search Engine</h1>
         <div class="inner-form">
             <div class="input-field first-wrap">
@@ -32,6 +33,29 @@
             </div>
         </div>
         {% if results %}
+        <div id="reccomendation-field">
+            <!-- SOrting tags -->
+            {% set mainTags = {} %}
+            
+            {% for result in results %}
+                {% for tag in result.tags %}
+                    {% if tag in mainTags %}
+                        {% set mainTags = mainTags.update({tag: mainTags[tag] + 1}) %}
+                    {% else %}
+                        {% set mainTags = mainTags.update({tag: 1}) %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            {% set mainTags = mainTags|dictsort(by='value', reverse=True)  %}
+            <!-- End SOrting tags -->
+
+            <h1>Reccomendation Keyword</h1>
+            <ul class="reco-list">
+                {% for tag, freq in mainTags[:10] %}
+                    <li class="reco-item"><button type="button" onclick="setInputQuery('{{ tag }}')">{{ tag }}</button></li>
+                {% endfor %}
+            </ul>
+        </div>
         <div class="results">
             <h2>Search Results for <i style = 'color: gray'>'{{ query }}'</i></h2>
             <ul id="resultsList">
@@ -66,4 +90,11 @@
     </form>
 </div>
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->
+<script>
+    function setInputQuery(value) {
+	document.getElementById("search").value = value;
+	console.log("Hello");
+	document.getElementById("mainForm").submit();
+}
+</script>
 </html>
