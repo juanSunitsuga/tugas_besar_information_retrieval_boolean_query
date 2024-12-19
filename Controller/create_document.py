@@ -10,11 +10,13 @@ def clean_filename(name):
 
 # Load the CSV file and add unique IDs
 file_path = '../dataset/steam_uncleaned.csv'
+# file_path = 'dataset/steam_uncleaned.csv' #Khusus untuk william fi
 steam_data = pd.read_csv(file_path)
 steam_data['id'] = steam_data.index + 1  # Generate unique IDs starting from 1
 
 # Define the output directory
 output_dir = '../dataset/document'
+# output_dir = 'dataset/document' #Khusus untuk William FI
 os.makedirs(output_dir, exist_ok=True)
 
 # Create a document for each game with the specified structure

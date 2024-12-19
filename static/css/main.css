@@ -986,6 +986,51 @@ button {
         font-size: 13px;
     }
 }
+
+#reccomendation-field {
+    background-color: rgb(198, 198, 198);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    color: black;
+}
+
+#reccomendation-field h1 {
+    font-size: 1.5em;
+    color: #005f36; 
+    margin-bottom: 10px;
+}
+
+ul.reco-list {
+    list-style-type: none;
+    margin: 0;
+}
+
+.reco-item   {
+    margin: 5px 2px;
+    display: inline-block;
+}
+
+.reco-item button {
+    color: rgb(61, 61, 254);
+    font-style: italic; 
+    background-color: #dddddd;
+    border-color: white;
+    border-radius: 10%;
+    transition: background-color 0.3s ease; 
+}
+
+.reco-item button:hover {
+    color: #dddddd;
+    cursor: pointer;
+    background-color: rgb(61, 61, 254);
+    border-color: rgb(126, 229, 255);
+    border-radius: 10%;
+    transition: background-color 0.3s ease; 
+}
+
 /* Style for the results container */
     .results {
         background-color: white;
