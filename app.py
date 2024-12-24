@@ -117,7 +117,7 @@ def game_details(path):
     price = extract_numeric_value(price)  # Extract only the numeric part
     doc_id = path.split("_")[0]
     # Get related games as 2D vectors
-    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, price, 5, doc_id)
+    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, price, 5, doc_id) #start state
 
     # Render the template
     return render_template(
