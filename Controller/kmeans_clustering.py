@@ -110,16 +110,42 @@ def perform_clustering(features, game_ids, n_clusters):
     return clusters
 
 
+def update_inverted_index_with_clusters(inverted_index, document_data):
+    for term, term_data in inverted_index.items():
+        if "postings" in term_data:
+            for doc_id in list(term_data["postings"].keys()):
+                doc_id = int(doc_id)  # Ensure doc_id is an integer
+                cluster_id = int(document_data[doc_id].get('cluster', -1))  # Convert to Python int
+                term_data["postings"][str(doc_id)] = {
+                    "score": term_data["postings"][str(doc_id)],
+                    "cluster": cluster_id
+                }
+    return inverted_index
+
+
+def save_updated_inverted_index(file_path, inverted_index):
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(inverted_index, f, indent=4)
+    print(f"Inverted index updated and saved to {file_path}.")
+
+
 def main():
+    # Load and prepare data
     features, game_ids = prepare_features()
 
-    print("Finding the optimal number of clusters...")
-    optimal_k = 25
-    print(f"Optimal number of clusters: {optimal_k}")
-
+    # Perform clustering
     print("Clustering the games...")
+    optimal_k = 25
     clusters = perform_clustering(features, game_ids, n_clusters=optimal_k)
 
+    # Update the inverted index
+    print("Updating inverted index with cluster data...")
+    updated_inverted_index = update_inverted_index_with_clusters(inverted_index, document_data)
+
+    # Save the updated inverted index
+    save_updated_inverted_index("../dataset/inverted_index_ai.json", updated_inverted_index)
+
+    # Print clustering results for verification
     for cluster in range(optimal_k):
         print(f"\nCluster {cluster + 1}:")
         cluster_games = [document_data[doc_id]['data']['Name'] for doc_id, c in zip(game_ids, clusters) if c == cluster]
