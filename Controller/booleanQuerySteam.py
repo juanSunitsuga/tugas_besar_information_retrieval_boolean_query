@@ -133,7 +133,7 @@ def boolean_search(query):
             'price': document_data[doc_id]['data'].get('Price', 'Unknown'),
             'release_date': document_data[doc_id]['data'].get('Release_date', 'Unknown'),
             'review_no': document_data[doc_id]['data'].get('Review_no', 'Unknown'),
-            'tags': document_data[doc_id].get('Tags', 'Unknown'),
+            'tags': document_data[doc_id]['data'].get('Tags', 'Unknown'),
             'path': f"dataset/document/{document_data[doc_id]['sanitized_name']}",
             'rec_path': f"{document_data[doc_id]['sanitized_name']}"
         }
