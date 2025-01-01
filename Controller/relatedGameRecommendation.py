@@ -1,6 +1,7 @@
 from Controller import booleanQuerySteam
 
-#AI Agent
+
+# AI Agent
 def calculate_similarity(target_tags, target_price, doc_tags, doc_price, weight_tags=0.7, weight_score=0.3):
     """Calculate weighted similarity based on tags and score."""
     # Tag similarity (Jaccard index)
@@ -14,6 +15,7 @@ def calculate_similarity(target_tags, target_price, doc_tags, doc_price, weight_
     # Weighted similarity
     overall_similarity = weight_tags * tag_similarity + weight_score * score_similarity
     return tag_similarity, score_similarity, overall_similarity
+
 
 # Start state is when being called e.g.(in app.py)
 def recommend_related_games(target_game_tags, target_game_price, top_n=5, doc_id=None):

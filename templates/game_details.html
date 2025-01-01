@@ -21,17 +21,18 @@
     <p><strong>Description:</strong> {{ game.description }}</p>
     <a href="{{ url_for('index') }}" class="back-btn">Back to Search</a>
 </div>
-<div class="container">
+<div class="container results">
     <h2>Related Games</h2>
     <ul id="resultsList">
         {% for related_game in related_games %}
-            <li>
-                <a href="{{ url_for('game_details', path=related_game.path) }}" target="_blank">
+            <a href="{{ url_for('game_details', path=related_game.path) }}" target="_blank" class="result-link">
+                <li>
                     <strong>{{ related_game.name }}</strong>
-                </a><br>
-                Price: {{ related_game.price }} <br>
-                Release Date: {{ related_game.release_date }} <br>
-            </li>
+                    <br>
+                    Price: {{ related_game.price }} <br>
+                    Release Date: {{ related_game.release_date }} <br>
+                </li>
+            </a>
         {% endfor %}
     </ul>
 </div>

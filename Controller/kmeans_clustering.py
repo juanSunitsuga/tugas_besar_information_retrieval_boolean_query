@@ -1,14 +1,9 @@
-import matplotlib
-
-matplotlib.use('TkAgg')  # Use TkAgg backend
 import json
 import os
 import re
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import silhouette_score
 
 
 # Load the inverted index
@@ -102,36 +97,6 @@ def prepare_features():
     return np.array(features), game_ids
 
 
-def find_optimal_k(features_scaled, max_k=50):
-    sse = []
-    silhouette_scores = []
-
-    for k in range(2, max_k + 1):
-        kmeans = KMeans(n_clusters=k, random_state=42)
-        kmeans.fit(features_scaled)
-        sse.append(kmeans.inertia_)
-        silhouette_scores.append(silhouette_score(features_scaled, kmeans.labels_))
-
-    plt.figure(figsize=(10, 5))
-    plt.subplot(1, 2, 1)
-    plt.plot(range(2, max_k + 1), sse, marker='o')
-    plt.title("Elbow Method")
-    plt.xlabel("Number of Clusters (k)")
-    plt.ylabel("Sum of Squared Errors (SSE)")
-
-    plt.subplot(1, 2, 2)
-    plt.plot(range(2, max_k + 1), silhouette_scores, marker='o', color='orange')
-    plt.title("Silhouette Score")
-    plt.xlabel("Number of Clusters (k)")
-    plt.ylabel("Silhouette Score")
-
-    plt.tight_layout()
-    plt.show()
-
-    optimal_k = range(2, max_k + 1)[np.argmax(silhouette_scores)]
-    return optimal_k
-
-
 def perform_clustering(features, game_ids, n_clusters):
     scaler = StandardScaler()
     features_scaled = scaler.fit_transform(features)
@@ -148,17 +113,9 @@ def perform_clustering(features, game_ids, n_clusters):
 def main():
     features, game_ids = prepare_features()
 
-    if features.ndim != 2:
-        print("Error: Features array is not 2D.")
-        return
-
-    scaler = StandardScaler()
-    features_scaled = scaler.fit_transform(features)
-
     print("Finding the optimal number of clusters...")
-    optimal_k = find_optimal_k(features_scaled)
-    print(f"Optimal number of clusters: {optimal_k}")
     optimal_k = 25
+    print(f"Optimal number of clusters: {optimal_k}")
 
     print("Clustering the games...")
     clusters = perform_clustering(features, game_ids, n_clusters=optimal_k)
@@ -167,7 +124,6 @@ def main():
         print(f"\nCluster {cluster + 1}:")
         cluster_games = [document_data[doc_id]['data']['Name'] for doc_id, c in zip(game_ids, clusters) if c == cluster]
         print(", ".join(cluster_games))
-
 
 
 if __name__ == "__main__":

@@ -33,68 +33,75 @@
             </div>
         </div>
         {% if results %}
-        <div id="reccomendation-field">
-            <!-- SOrting tags -->
-            {% set mainTags = {} %}
-            
-            {% for result in results %}
-                {% for tag in result.tags %}
-                    {% if tag in mainTags %}
-                        {% set mainTags = mainTags.update({tag: mainTags[tag] + 1}) %}
-                    {% else %}
-                        {% set mainTags = mainTags.update({tag: 1}) %}
-                    {% endif %}
-                {% endfor %}
-            {% endfor %}
-            {% set mainTags = mainTags|dictsort(by='value', reverse=True)  %}
-            <!-- End SOrting tags -->
+            <div id="reccomendation-field">
+                <!-- SOrting tags -->
+                {% set mainTags = {} %}
 
-            <h1>Reccomendation Keyword</h1>
-            <ul class="reco-list">
-                {% for tag, freq in mainTags[:10] %}
-                    <li class="reco-item"><button type="button" onclick="setInputQuery('{{ tag }}')">{{ tag }}</button></li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="results">
-            <h2>Search Results for <i style = 'color: gray'>'{{ query }}'</i></h2>
-            <ul id="resultsList">
                 {% for result in results %}
-                <li>
-                    <a href="{{url_for('game_details', path=result.sanitized_name) }}" target="_blank"><strong>{{ result.name }}</strong> </a><br>
-                    Price: {{ result.price }} <br>
-                    Release Date: {{ result.release_date }} <br>
-                    Score: 
-                    {% if result.score %}
-                        {{ result.score }}  <!-- Boolean query score -->
-                    {% elif result.similarity %}
-                        {{ result.similarity }}  <!-- Embedding query similarity -->
-                    {% else %}
-                        N/A  <!-- In case no score or similarity is available -->
-                    {% endif %}
-                </li>
+                    {% for tag in result.tags %}
+                        {% if tag in mainTags %}
+                            {% set mainTags = mainTags.update({tag: mainTags[tag] + 1}) %}
+                        {% else %}
+                            {% set mainTags = mainTags.update({tag: 1}) %}
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
-            </ul>
+                {% set mainTags = mainTags|dictsort(by='value', reverse=True) %}
+                <!-- End SOrting tags -->
 
-            <!-- Pagination Controls -->
-            {% if page > 1 %}
-            <a href="{{ url_for('search', page=page-1, query=query) }}" class="pagination-btn prev-btn">Previous</a>
-            {% endif %}
+                <h1>Reccomendation Keyword</h1>
+                <ul class="reco-list">
+                    {% for tag, freq in mainTags[:10] %}
+                        <li class="reco-item">
+                            <button type="button" onclick="setInputQuery('{{ tag }}')">{{ tag }}</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="results">
+                <h2>Search Results for <i style='color: gray'>'{{ query }}'</i></h2>
+                <ul id="resultsList">
+                    {% for result in results %}
+                        <a href="{{ url_for('game_details', path=result.sanitized_name) }}" target="_blank"
+                           class="result-link">
+                            <li>
+                                <strong>{{ result.name }}</strong><br>
+                                Price: {{ result.price }}<br>
+                                Release Date: {{ result.release_date }}<br>
+                                Score:
+                                {% if result.score %}
+                                    {{ result.score }} <!-- Boolean query score -->
+                                {% elif result.similarity %}
+                                    {{ result.similarity }} <!-- Embedding query similarity -->
+                                {% else %}
+                                    N/A <!-- In case no score or similarity is available -->
+                                {% endif %}
+                            </li>
+                        </a>
+                    {% endfor %}
+                </ul>
 
-            {% if page * per_page < total_results %}
-            <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn next-btn">Next</a>
-            {% endif %}
 
-        </div>
+                <!-- Pagination Controls -->
+                {% if page > 1 %}
+                    <a href="{{ url_for('search', page=page-1, query=query) }}"
+                       class="pagination-btn prev-btn">Previous</a>
+                {% endif %}
+
+                {% if page * per_page < total_results %}
+                    <a href="{{ url_for('search', page=page+1, query=query) }}" class="pagination-btn next-btn">Next</a>
+                {% endif %}
+
+            </div>
         {% endif %}
     </form>
 </div>
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->
 <script>
     function setInputQuery(value) {
-	document.getElementById("search").value = value;
-	console.log("Hello");
-	document.getElementById("mainForm").submit();
-}
+        document.getElementById("search").value = value;
+        console.log("Hello");
+        document.getElementById("mainForm").submit();
+    }
 </script>
 </html>
