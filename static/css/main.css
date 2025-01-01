@@ -999,7 +999,7 @@ button {
 
 #reccomendation-field h1 {
     font-size: 1.5em;
-    color: #005f36; 
+    color: #005f36;
     margin-bottom: 10px;
 }
 
@@ -1008,18 +1008,18 @@ ul.reco-list {
     margin: 0;
 }
 
-.reco-item   {
+.reco-item {
     margin: 5px 2px;
     display: inline-block;
 }
 
 .reco-item button {
     color: rgb(61, 61, 254);
-    font-style: italic; 
+    font-style: italic;
     background-color: #dddddd;
     border-color: white;
     border-radius: 10%;
-    transition: background-color 0.3s ease; 
+    transition: background-color 0.3s ease;
 }
 
 .reco-item button:hover {
@@ -1028,95 +1028,105 @@ ul.reco-list {
     background-color: rgb(61, 61, 254);
     border-color: rgb(126, 229, 255);
     border-radius: 10%;
-    transition: background-color 0.3s ease; 
+    transition: background-color 0.3s ease;
 }
 
 /* Style for the results container */
-    .results {
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        margin-top: 20px;
-        color: black;
-    }
+.results {
+    text-decoration: none;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    color: black;
+}
 
-    /* Heading for the results */
-    .results h2 {
-        font-size: 1.5em;
-        color: #00BCD4;
-        margin-bottom: 10px;
-    }
+/* Heading for the results */
+.results h2 {
+    font-size: 1.5em;
+    color: #00BCD4;
+    margin-bottom: 10px;
+}
 
-    /* List of results */
-    .results ul {
-        list-style-type: none;
-        padding: 0;
-    }
+/* List of results */
+.results ul {
+    list-style-type: none;
+    padding: 0;
+}
 
-    /* Individual result item */
-    .results li {
-        padding: 10px 0;
-        border-bottom: 1px solid #ddd;
-    }
+/* Remove default link styles */
+.result-link {
+    text-decoration: none;
+    color: inherit; /* Inherit color from the parent */
+    display: block; /* Ensure the entire <li> is clickable */
+}
 
-    .results li:last-child {
-        border-bottom: none;
-    }
+/* Individual result item */
+.results li {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s ease;
+}
 
-    /* Style for the text inside result items */
-    .results li strong {
-        color: #333;
-        font-size: 1.2em;
-    }
+.results li:last-child {
+    border-bottom: none;
+}
 
-    .results li span {
-        display: block;
-        color: #777;
-        font-size: 0.9em;
-        margin-top: 5px;
-    }
+/* Optional: Hover effect for result items */
+.result-link:hover li {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
 
-    /* Optional: Hover effect for result items */
-    .results li:hover {
-        background-color: #f9f9f9;
-        cursor: pointer;
-    }
+/* Style for the text inside result items */
+.results li strong {
+    color: #333;
+    font-size: 1.2em;
+}
 
-    /* Pagination container styles */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
+.results li span {
+    display: block;
+    color: #777;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
 
-    .pagination-btn {
-        background-color: #1357b0; /* Matching theme color */
-        color: white;
-        padding: 2% 20%;
-        margin: 0 10px;
-        text-decoration: none;
-        border-radius: 10px;
-        font-size: 1em;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-    }
 
-    .pagination-btn:hover {
-        background-color: #1357b0; /* Darker shade on hover */
-    }
+/* Pagination container styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
 
-    .pagination-btn:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-    }
+.pagination-btn {
+    background-color: #1357b0; /* Matching theme color */
+    color: white;
+    padding: 2% 20%;
+    margin: 0 10px;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 1em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
 
-    .prev-btn {
-        border-radius: 4px 4px 4px 4px; /* Rounded left corner for Previous button */
-    }
+.pagination-btn:hover {
+    background-color: #1357b0; /* Darker shade on hover */
+}
 
-    .next-btn {
-        border-radius: 4px 4px 4px 4px; /* Rounded right corner for Next button */
-    }
+.pagination-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.prev-btn {
+    border-radius: 4px 4px 4px 4px; /* Rounded left corner for Previous button */
+}
+
+.next-btn {
+    border-radius: 4px 4px 4px 4px; /* Rounded right corner for Next button */
+}
