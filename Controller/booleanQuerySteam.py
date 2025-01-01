@@ -118,7 +118,8 @@ def boolean_search(query):
         for token in stemmed_tokens:
             if token in inverted_index:
                 postings = inverted_index[token]["postings"]
-                score += postings.get(doc_id_str, 0)
+                posting_data = postings.get(doc_id_str, {})
+                score += posting_data.get("score", 0)
         ranked_results.append((doc_id, score))
 
     ranked_results.sort(key=lambda x: -x[1])
