@@ -37,6 +37,10 @@ def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_
         # x = ''.join(c for c in doc.get('price', 0) if c in "1234567890.")
         # doc_price = float(0 if len(x) == 0 else x)
 
+        # Exclude games with cluster = -1
+        if doc_cluster == -1:
+            continue
+
         # Calculate similarity
         tag_similarity = calculate_similarity(
             target_tags=target_game_tags,
