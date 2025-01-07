@@ -3,6 +3,7 @@ import os
 import string
 import re
 from nltk.stem import PorterStemmer
+import difflib  # For Levenshtein-like matching
 
 # Global variables to hold loaded data
 inverted_index = {}
@@ -77,18 +78,34 @@ def parse_document_content(content):
     return data
 
 
+def get_closest_matches(word, dictionary, cutoff=0.8):
+    matches = difflib.get_close_matches(word, dictionary, n=1, cutoff=cutoff)
+    return matches[0] if matches else word
 
-# Controller search with ranking
+
 def boolean_search(query):
     tokens = query.upper().split()
     translator = str.maketrans('', '', string.punctuation)
     filtered_tokens = [word.translate(translator) for word in tokens]
     stemmer = PorterStemmer()
-    stemmed_tokens = [stemmer.stem(word.lower()) for word in filtered_tokens]
+
+    # Separate sentences into words, stem them, and find closest matches
+    corrected_tokens = []
+    inverted_index_keys = list(inverted_index.keys())
+
+    for token in filtered_tokens:
+        # Split token into words if it appears to be a sentence
+        words = token.split()
+        corrected_words = [
+            get_closest_matches(stemmer.stem(word.lower()), inverted_index_keys, cutoff=0.8)
+            for word in words
+        ]
+        corrected_tokens.append(" ".join(corrected_words))  # Rebuild corrected sentence
+
     result = None
     current_operation = 'and'
 
-    for token in stemmed_tokens:
+    for token in corrected_tokens:
         if token in {'and', 'or', 'not'}:
             current_operation = token  # Update the current operation
         else:
@@ -115,13 +132,13 @@ def boolean_search(query):
     for doc_id in result:
         doc_id_str = str(doc_id)
         score = 0
-        cluster =0
-        for token in stemmed_tokens:
+        cluster = 0
+        for token in corrected_tokens:
             if token in inverted_index:
                 postings = inverted_index[token]["postings"]
                 posting_data = postings.get(doc_id_str, {})
                 score += posting_data.get("score", 0)
-                cluster = posting_data.get("cluster",-1)
+                cluster = posting_data.get("cluster", -1)
         ranked_results.append((doc_id, score, cluster))
 
     ranked_results.sort(key=lambda x: -x[1])
@@ -141,7 +158,7 @@ def boolean_search(query):
             'path': f"dataset/document/{document_data[doc_id]['sanitized_name']}",
             'rec_path': f"{document_data[doc_id]['sanitized_name']}"
         }
-        for doc_id, score,cluster in ranked_results
+        for doc_id, score, cluster in ranked_results
     ]
 
 
