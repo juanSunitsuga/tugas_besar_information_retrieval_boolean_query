@@ -101,8 +101,8 @@ def extract_numeric_value(input_string):
     return float(match.group()) if match else 0.0
 
 
-@app.route('/game_details.html/<string:path>')
-def game_details(path):
+@app.route('/game_details.html/<string:path>/<int:cluster>')
+def game_details(path,cluster):
     # Build file path
     real_path = os.path.join("dataset", "document", path)
 
@@ -113,11 +113,12 @@ def game_details(path):
 
     # Extract tags and score for recommendation
     tags = game.get("tags", "").split(",")
-    price = game.get("price", "0")  # Default to "0" if missing
-    price = extract_numeric_value(price)  # Extract only the numeric part
+    # price = game.get("price", "0")  # Default to "0" if missing
+    # price = extract_numeric_value(price)  # Extract only the numeric part
     doc_id = path.split("_")[0]
-    # Get related games as 2D vectors
-    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, price, 5, doc_id) #start state
+
+    # Get related games
+    related_game_vectors = relatedGameRecommendation.recommend_related_games(tags, cluster, 5, doc_id) #start state
 
     # Render the template
     return render_template(

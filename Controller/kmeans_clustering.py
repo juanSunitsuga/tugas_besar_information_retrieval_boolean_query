@@ -73,7 +73,7 @@ def parse_document_content(content):
 # Initialize global variables
 inverted_index = {}
 document_data = {}
-load_inverted_index("../dataset/inverted_index_ai.json")
+load_inverted_index("../dataset/inverted_index.json")
 load_document_data("../dataset/document")
 
 
@@ -115,7 +115,7 @@ def update_inverted_index_with_clusters(inverted_index, document_data):
         if "postings" in term_data:
             for doc_id in list(term_data["postings"].keys()):
                 doc_id = int(doc_id)  # Ensure doc_id is an integer
-                cluster_id = int(document_data[doc_id].get('cluster', -1))  # Convert to Python int
+                cluster_id = int(document_data[doc_id].get('cluster'))  # Convert to Python int
                 term_data["postings"][str(doc_id)] = {
                     "score": term_data["postings"][str(doc_id)],
                     "cluster": cluster_id
@@ -135,7 +135,7 @@ def main():
 
     # Perform clustering
     print("Clustering the games...")
-    optimal_k = 25
+    optimal_k = 30
     clusters = perform_clustering(features, game_ids, n_clusters=optimal_k)
 
     # Update the inverted index
@@ -143,7 +143,7 @@ def main():
     updated_inverted_index = update_inverted_index_with_clusters(inverted_index, document_data)
 
     # Save the updated inverted index
-    save_updated_inverted_index("../dataset/inverted_index_ai.json", updated_inverted_index)
+    save_updated_inverted_index("../dataset/inverted_index_ai(30).json", updated_inverted_index)
 
     # Print clustering results for verification
     for cluster in range(optimal_k):

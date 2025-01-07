@@ -115,12 +115,14 @@ def boolean_search(query):
     for doc_id in result:
         doc_id_str = str(doc_id)
         score = 0
+        cluster =0
         for token in stemmed_tokens:
             if token in inverted_index:
                 postings = inverted_index[token]["postings"]
                 posting_data = postings.get(doc_id_str, {})
                 score += posting_data.get("score", 0)
-        ranked_results.append((doc_id, score))
+                cluster = posting_data.get("cluster",-1)
+        ranked_results.append((doc_id, score, cluster))
 
     ranked_results.sort(key=lambda x: -x[1])
 
@@ -129,6 +131,7 @@ def boolean_search(query):
         {
             'id': doc_id,
             'score': score,
+            'cluster': cluster,
             'original_name': document_data[doc_id].get('original_name', 'Unknown'),
             'name': document_data[doc_id]['data'].get('Name', 'Unknown'),
             'price': document_data[doc_id]['data'].get('Price', 'Unknown'),
@@ -138,7 +141,7 @@ def boolean_search(query):
             'path': f"dataset/document/{document_data[doc_id]['sanitized_name']}",
             'rec_path': f"{document_data[doc_id]['sanitized_name']}"
         }
-        for doc_id, score in ranked_results
+        for doc_id, score,cluster in ranked_results
     ]
 
 

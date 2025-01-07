@@ -25,7 +25,7 @@
     <h2>Related Games</h2>
     <ul id="resultsList">
         {% for related_game in related_games %}
-            <a href="{{ url_for('game_details', path=related_game.path) }}" target="_blank" class="result-link">
+            <a href="{{ url_for('game_details', path=related_game.path, cluster=related_game.cluster) }}" target="_blank" class="result-link">
                 <li>
                     <strong>{{ related_game.name }}</strong>
                     <br>

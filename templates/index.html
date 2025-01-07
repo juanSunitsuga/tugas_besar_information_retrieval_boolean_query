@@ -58,7 +58,7 @@
                 <h2>Search Results for <i style='color: gray'>'{{ query }}'</i></h2>
                 <ul id="resultsList">
                     {% for result in results %}
-                        <a href="{{ url_for('game_details', path=result.sanitized_name) }}" target="_blank"
+                        <a href="{{ url_for('game_details', path=result.sanitized_name, cluster=result.cluster) }}" target="_blank"
                            class="result-link">
                             <li>
                                 <strong>{{ result.name }}</strong><br>
