@@ -3,6 +3,7 @@ import os
 import string
 import re
 from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
 import difflib  # For Levenshtein-like matching
 
 # Global variables to hold loaded data
@@ -85,8 +86,13 @@ def get_closest_matches(word, dictionary, cutoff=0.8):
 
 def boolean_search(query):
     tokens = query.upper().split()
+
     translator = str.maketrans('', '', string.punctuation)
     filtered_tokens = [word.translate(translator) for word in tokens]
+
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [word for word in filtered_tokens if word.lower() not in stop_words]
+
     stemmer = PorterStemmer()
 
     # Separate sentences into words, stem them, and find closest matches
@@ -106,6 +112,7 @@ def boolean_search(query):
     current_operation = 'and'
 
     for token in corrected_tokens:
+        print(token)
         if token in {'and', 'or', 'not'}:
             current_operation = token  # Update the current operation
         else:
