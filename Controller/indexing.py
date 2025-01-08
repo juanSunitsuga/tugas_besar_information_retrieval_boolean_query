@@ -1,45 +1,42 @@
-import os
-import re
-import json
-import math
-from collections import defaultdict
-from nltk.stem import PorterStemmer
-from gensim.models import Word2Vec
+import os  # For interacting with the filesystem.
+import re  # For pattern matching and extracting text using regular expressions.
+import json  # For saving the inverted index as a JSON file.
+import math  # For mathematical calculations like logarithm.
+import string  # For removing punctuation from text.
+from collections import defaultdict  # For creating dictionaries with default values.
+from nltk.corpus import stopwords  # For filtering out common stop words.
+from nltk.stem import PorterStemmer  # For stemming words to their root forms.
 
 # Initialize the Porter Stemmer for stemming words
 stemmer = PorterStemmer()
 
 # Define the directory containing the documents
 input_dir = '../dataset/document'
+
+
 # input_dir = 'dataset/document' #Khusus Untuk William FI
 
 
 # Function to tokenize, remove punctuation, and stem words
 def process_text(text):
-    words = re.findall(r'\b\w+\b', text.lower())
-    return [stemmer.stem(word) for word in words]
+    # Tokenize the text into words
+    tokens = re.findall(r'\b\w+\b', text.lower())
+
+    # Remove punctuation
+    translator = str.maketrans('', '', string.punctuation)
+    tokens = [word.translate(translator) for word in tokens]
+
+    # Remove stop words
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+
+    # Stem the filtered words
+    return [stemmer.stem(word) for word in filtered_tokens]
 
 
 # Function to tokenize and clean text for Word2Vec training
 def tokenize_text(text):
     return re.findall(r'\b\w+\b', text.lower())
-
-
-# Read all documents and prepare a tokenized corpus for Word2Vec
-corpus = []
-for filename in os.listdir(input_dir):
-    if filename.endswith('.txt'):
-        file_path = os.path.join(input_dir, filename)
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            tokens = tokenize_text(content)
-            corpus.append(tokens)
-
-# Train a Word2Vec model on the corpus
-print("Training Word2Vec model...")
-model = Word2Vec(sentences=corpus, vector_size=100, window=5, min_count=1, workers=4)
-word_vectors = model.wv  # Extract word vectors
-print("Word2Vec model trained successfully!")
 
 
 # Helper function to extract Review_no from document content
@@ -69,7 +66,7 @@ for filename in os.listdir(input_dir):
         review_no = extract_review_no(content)
         review_numbers[doc_id] = review_no
 
-        # Tokenize, clean, and stem the content
+        # Tokenize, stop word, and stem the content
         tokens = process_text(content)
         document_count += 1
 
@@ -92,11 +89,6 @@ for term, idf_value in idf.items():
     postings = {}
     semantic_terms = {}
 
-    # Find semantically similar terms using Word2Vec
-    if term in word_vectors:
-        similar_words = word_vectors.most_similar(term, topn=5)  # Top 5 similar terms
-        semantic_terms = {word: similarity for word, similarity in similar_words}
-
     for doc_id, terms in doc_term_freq.items():
         if term in terms:
             tf = doc_term_freq[doc_id][term] / doc_lengths[doc_id]
@@ -115,4 +107,4 @@ output_path = '../dataset/inverted_index.json'
 with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(inverted_index, f, indent=4)
 
-print("AI-enhanced inverted index created successfully!")
+print("inverted index created successfully!")
