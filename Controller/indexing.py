@@ -34,11 +34,6 @@ def process_text(text):
     return [stemmer.stem(word) for word in filtered_tokens]
 
 
-# Function to tokenize and clean text for Word2Vec training
-def tokenize_text(text):
-    return re.findall(r'\b\w+\b', text.lower())
-
-
 # Helper function to extract Review_no from document content
 def extract_review_no(content):
     match = re.search(r'Review_no: (\d+)', content)
