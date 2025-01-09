@@ -1,9 +1,8 @@
-import re
-
-from flask import Flask, render_template, request, jsonify, send_from_directory
+import re  # Regular expressions for pattern matching and text processing
+import os  # File path and directory management
+from flask import Flask, render_template, request, jsonify  # Flask framework for web app development
 from Controller import booleanQuerySteam
 from Controller import relatedGameRecommendation
-import os
 
 app = Flask(__name__, template_folder='templates')
 

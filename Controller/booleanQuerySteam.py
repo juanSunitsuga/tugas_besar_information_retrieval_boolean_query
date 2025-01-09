@@ -1,10 +1,11 @@
-import json
-import os
-import string
-import re
-from nltk.stem import PorterStemmer
-from nltk.corpus import stopwords
-import difflib  # For Levenshtein-like matching
+import json  # load and save data like the JSON inverted index.
+import os  # For interacting with the file system, e.g., reading files and checking file/directory existence.
+import string  # For handling strings and removing punctuation.
+import re  # For working with regular expressions to parse and process text.
+from nltk.stem import PorterStemmer  # For stemming words to their root forms (e.g., "running" -> "run").
+from nltk.corpus import stopwords  # For removing common stop words (e.g., "the", "and") during text processing.
+import difflib  # For approximate string matching, used for correcting and finding similar terms in a dictionary.
+
 
 # Global variables to hold loaded data
 inverted_index = {}

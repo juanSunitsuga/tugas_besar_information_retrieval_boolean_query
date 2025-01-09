@@ -1,6 +1,6 @@
-import os
-import re
-import pandas as pd
+import os  # For interacting with the filesystem, e.g., creating directories and writing files.
+import re  # For cleaning strings with regular expressions.
+import pandas as pd  # For reading and processing tabular data from CSV files.
 
 
 # Define the function to clean filenames
