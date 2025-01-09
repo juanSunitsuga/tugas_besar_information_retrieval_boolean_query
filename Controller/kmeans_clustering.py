@@ -1,9 +1,9 @@
-import json
-import os
-import re
-import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
+import json  # For modifying the inverted index.
+import os  # Handle file reading, writing, and path operations.
+import re  # Perform regular expression-based string manipulation.
+import numpy as np  # Work with numerical data.
+from sklearn.cluster import KMeans  # Apply K-Means clustering.
+from sklearn.preprocessing import StandardScaler  # Normalize features before clustering.
 
 
 # Load the inverted index
@@ -73,7 +73,7 @@ def parse_document_content(content):
 # Initialize global variables
 inverted_index = {}
 document_data = {}
-load_inverted_index("../dataset/inverted_index.json")
+load_inverted_index("../dataset/inverted_index_ai.json")
 load_document_data("../dataset/document")
 
 
