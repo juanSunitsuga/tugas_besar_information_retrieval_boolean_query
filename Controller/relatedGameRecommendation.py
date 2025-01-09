@@ -1,21 +1,5 @@
 from Controller import booleanQuerySteam
 
-#if needed : weight_tags=0.7, weight_score=0.3
-
-def calculate_similarity(target_tags, doc_tags):
-    """Calculate weighted similarity based on tags and cluster."""
-
-    # Tag similarity (Jaccard index)
-    # Calculate the ratio of the overlapping tags to the overall tags
-    tag_similarity = len(set(target_tags) & set(doc_tags)) / len(set(target_tags) | set(doc_tags))
-
-    # Score similarity (inverted normalized difference)
-    # Calculate the ratio of the difference price to the highest price
-    # score_similarity = 1 - abs(target_price - doc_price) / max(1, target_price, doc_price)
-
-    return  tag_similarity
-
-
 def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_id=None):
     """Find and recommend related games based on cluster and tag similarity."""
     # Filter postings from the inverted index by target cluster
@@ -23,15 +7,14 @@ def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_
     for term, term_data in booleanQuerySteam.inverted_index.items():
         for doc_id_key, posting in term_data['postings'].items():
             if posting['cluster'] == target_game_cluster:
-                # Avoid duplicates
+
                 if int(doc_id_key) not in [doc['id'] for doc in same_cluster_docs]:
                     same_cluster_docs.append({
                         'id': int(doc_id_key),
-                        'score': posting['score'],  # TF-IDF score if needed
                         'cluster': posting['cluster']
                     })
 
-    # If no documents are found in the same cluster, return an empty list
+    # If not found in the same cluster, return empty list
     if not same_cluster_docs:
         return []
 
@@ -46,18 +29,15 @@ def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_
         # Retrieve document details
         doc_tags = booleanQuerySteam.document_data[doc_id_current]['data']['Tags']
 
-        # Calculate similarity
-        tag_similarity = calculate_similarity(
-            target_tags=target_game_tags,
-            doc_tags=doc_tags,
-        )
+        # Calculate similarity (Jaccard index)
+        # Calculate the ratio of the overlapping tags to the overall tags
+        tag_similarity = len(set(target_game_tags) & set(doc_tags)) / len(set(target_game_tags) | set(doc_tags))
 
         if doc['id'] == int(doc_id):
             continue
         else:
             recommendations.append({
                 'id': doc['id'],
-                'score': doc['score'],
                 'cluster': doc['cluster'],
                 'name': booleanQuerySteam.document_data[doc['id']]['data']['Name'],
                 'price': booleanQuerySteam.document_data[doc['id']]['data']['Price'],
@@ -65,16 +45,12 @@ def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_
                 'path': f"{booleanQuerySteam.document_data[doc['id']]['sanitized_name']}",
                 'tag_similarity': tag_similarity
             })
-            # 'score_similarity': score_similarity,
-            # 'overall_similarity': overall_similarity
 
     # Sort by tag similarity and take the top N results
     recommendations.sort(key=lambda x: -x['tag_similarity'])
     top_recommendations = recommendations[:top_n]
 
-    # Convert to 2D vectors (x: tag similarity, y: score similarity)
-    vectors = [{'game': rec} for rec in top_recommendations]
-    #'x': rec['tag_similarity'],'y': rec['score_similarity'],
+    recommended_game = [{'game': rec} for rec in top_recommendations]
 
-    # Goal state (top 5 recommendation games [sorted] with its vector)
-    return vectors
+    # Goal state (top 5 recommendation games [sorted])
+    return recommended_game
