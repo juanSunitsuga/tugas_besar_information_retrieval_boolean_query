@@ -2,51 +2,54 @@ from Controller import booleanQuerySteam
 
 #if needed : weight_tags=0.7, weight_score=0.3
 
-def calculate_similarity(target_tags, target_cluster, doc_tags, doc_cluster, ):
+def calculate_similarity(target_tags, doc_tags):
     """Calculate weighted similarity based on tags and cluster."""
-    tag_similarity =0
 
-    # Cluster similarity (binary)
-    if target_cluster == doc_cluster:
-        # Tag similarity (Jaccard index)
-        # Calculate the ratio of the overlapping tags to the overall tags
-        tag_similarity = len(set(target_tags) & set(doc_tags)) / len(set(target_tags) | set(doc_tags))
+    # Tag similarity (Jaccard index)
+    # Calculate the ratio of the overlapping tags to the overall tags
+    tag_similarity = len(set(target_tags) & set(doc_tags)) / len(set(target_tags) | set(doc_tags))
 
-        # Score similarity (inverted normalized difference)
-        # Calculate the ratio of the difference price to the highest price
-        # score_similarity = 1 - abs(target_price - doc_price) / max(1, target_price, doc_price)
+    # Score similarity (inverted normalized difference)
+    # Calculate the ratio of the difference price to the highest price
+    # score_similarity = 1 - abs(target_price - doc_price) / max(1, target_price, doc_price)
 
     return  tag_similarity
 
 
 def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_id=None):
-    """Find and recommend related games."""
-    # Perform a boolean search for documents with matching tags
-    search_query = " OR ".join(target_game_tags)
-    search_results = booleanQuerySteam.boolean_search(search_query)
+    """Find and recommend related games based on cluster and tag similarity."""
+    # Filter postings from the inverted index by target cluster
+    same_cluster_docs = []
+    for term, term_data in booleanQuerySteam.inverted_index.items():
+        for doc_id_key, posting in term_data['postings'].items():
+            if posting['cluster'] == target_game_cluster:
+                # Avoid duplicates
+                if int(doc_id_key) not in [doc['id'] for doc in same_cluster_docs]:
+                    same_cluster_docs.append({
+                        'id': int(doc_id_key),
+                        'score': posting['score'],  # TF-IDF score if needed
+                        'cluster': posting['cluster']
+                    })
 
-    if not search_results:
+    # If no documents are found in the same cluster, return an empty list
+    if not same_cluster_docs:
         return []
 
     recommendations = []
 
-    # Compare target game with search results
-    for doc in search_results:
-        doc_tags = doc['tags']
-        doc_cluster = doc['cluster']
-        # x = ''.join(c for c in doc.get('price', 0) if c in "1234567890.")
-        # doc_price = float(0 if len(x) == 0 else x)
-
-        # Exclude games with cluster = -1
-        if doc_cluster == -1:
+    # Compare target game with documents in the same cluster
+    for doc in same_cluster_docs:
+        doc_id_current = doc['id']
+        if doc_id_current == int(doc_id):  # Skip the target game itself
             continue
+
+        # Retrieve document details
+        doc_tags = booleanQuerySteam.document_data[doc_id_current]['data']['Tags']
 
         # Calculate similarity
         tag_similarity = calculate_similarity(
             target_tags=target_game_tags,
-            target_cluster=target_game_cluster,
             doc_tags=doc_tags,
-            doc_cluster=doc_cluster,
         )
 
         if doc['id'] == int(doc_id):
@@ -56,10 +59,10 @@ def recommend_related_games(target_game_tags, target_game_cluster, top_n=5, doc_
                 'id': doc['id'],
                 'score': doc['score'],
                 'cluster': doc['cluster'],
-                'name': doc['name'],
-                'price': doc['price'],
-                'release_date': doc['release_date'],
-                'path': doc['rec_path'],
+                'name': booleanQuerySteam.document_data[doc['id']]['data']['Name'],
+                'price': booleanQuerySteam.document_data[doc['id']]['data']['Price'],
+                'release_date': booleanQuerySteam.document_data[doc['id']]['data']['Release_date'],
+                'path': f"{booleanQuerySteam.document_data[doc['id']]['sanitized_name']}",
                 'tag_similarity': tag_similarity
             })
             # 'score_similarity': score_similarity,
