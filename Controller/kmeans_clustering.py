@@ -73,7 +73,7 @@ def parse_document_content(content):
 # Initialize global variables
 inverted_index = {}
 document_data = {}
-load_inverted_index("../dataset/inverted_index.json")
+load_inverted_index("../dataset/inverted_index_ai.json")
 load_document_data("../dataset/document")
 
 
